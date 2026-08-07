@@ -356,6 +356,16 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
+        // Load configuration from localStorage
+        // Credentials are set via auto-load-env.html or setup-credentials.html
+        const CONFIG = {
+            JIRA_SERVER: localStorage.getItem('JIRA_SERVER') || '',
+            JIRA_PAT: localStorage.getItem('JIRA_PAT') || '',
+            OPENAI_API_KEY: localStorage.getItem('OPENAI_API_KEY') || '',
+            OPENAI_BASE_URL: localStorage.getItem('OPENAI_BASE_URL') || 'https://api.openai.com/v1',
+            AI_MODEL_NAME: localStorage.getItem('AI_MODEL_NAME') || 'gpt-4-turbo-preview',
+        };
+
         // Helper: Extract issue key from browse URL or plain key
         const parseIssueKey = (input) => {
             if (!input) return '';

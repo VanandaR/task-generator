@@ -157,8 +157,21 @@ const server = http.createServer(async (req, res) => {
       jiraServer: JIRA_SERVER,
       aiModelName: AI_MODEL_NAME,
       aiBaseUrl: OPENAI_BASE_URL,
-      aiApiKey: OPENAI_API_KEY,
     }));
+    return;
+  }
+
+  // GET /.env — serve .env file for config loading
+  if (req.method === 'GET' && req.url === '/.env') {
+    fs.readFile(path.join(__dirname, '.env'), (err, data) => {
+      if (err) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end(data);
+    });
     return;
   }
 
