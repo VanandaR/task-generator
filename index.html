@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jira Subtask Generator</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #root {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .subtask-generator {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .main-content {
+            min-height: 400px;
+        }
+
+        .search-section h2,
+        .form-section h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input-group input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-input-group input:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .search-input-group button,
+        .change-issue-btn,
+        .submit-btn,
+        .create-another-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .search-input-group button:hover:not(:disabled),
+        .change-issue-btn:hover,
+        .submit-btn:hover:not(:disabled),
+        .create-another-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-input-group button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .issue-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .issue-summary h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .issue-title {
+            font-size: 16px;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .change-issue-btn {
+            padding: 8px 15px;
+            background: white;
+            color: #667eea;
+        }
+
+        .form-section {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .subtask-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            background-color: #f9f7ff;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group input:disabled,
+        .form-group textarea:disabled,
+        .form-group select:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+            color: #999;
+        }
+
+        .form-group .error {
+            color: #f44;
+            font-size: 12px;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .submit-btn {
+            padding: 14px 30px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background-color: #fee;
+            border-left: 4px solid #f44;
+            color: #c33;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            border-left: 4px solid #22c55e;
+            color: #015f0e;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .success-message p {
+            margin-bottom: 10px;
+        }
+
+        .success-message strong {
+            font-weight: 600;
+        }
+
+        .create-another-btn {
+            padding: 10px 20px;
+            background: white;
+            color: #015f0e;
+            margin-top: 10px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .subtask-generator {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .search-input-group {
+                flex-direction: column;
+            }
+
+            .search-input-group button {
+                width: 100%;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Configuration - Load from window or environment
+        const CONFIG = {
+            JIRA_SERVER: window.CONFIG?.JIRA_SERVER || localStorage.getItem('JIRA_SERVER') || '',
+            JIRA_PAT: window.CONFIG?.JIRA_PAT || localStorage.getItem('JIRA_PAT') || '',
+            OPENAI_API_KEY: window.CONFIG?.OPENAI_API_KEY || localStorage.getItem('OPENAI_API_KEY') || '',
+            OPENAI_BASE_URL: window.CONFIG?.OPENAI_BASE_URL || localStorage.getItem('OPENAI_BASE_URL') || '',
+            AI_MODEL_NAME: window.CONFIG?.AI_MODEL_NAME || localStorage.getItem('AI_MODEL_NAME') || '',
+        };
+
+        // Show warning if not configured
+        if (!CONFIG.JIRA_SERVER || !CONFIG.JIRA_PAT || !CONFIG.OPENAI_API_KEY) {
+            console.warn('Configuration not found. Please set environment variables or CONFIG object.');
+        }
+
+        // Services
+        const jiraService = {
+            getIssue: async (issueKey) => {
+                try {
+                    const response = await axios.get(
+                        `${CONFIG.JIRA_SERVER}/rest/api/3/issues/${issueKey}`,
+                        {
+                            auth: {
+                                username: 'api_token',
+                                password: CONFIG.JIRA_PAT,
+                            },
+                            headers: {
+                                'Accept': 'application/json',
+                            },
+                        }
+                    );
+                    return response.data;
+                } catch (error) {
+                    throw new Error(`Failed to fetch issue: ${error.response?.data?.errorMessages?.[0] || error.message}`);
+                }
+            },
+
+            createSubtask: async (parentIssueKey, subtaskData) => {
+                try {
+                    const projectKey = parentIssueKey.split('-')[0];
+                    const response = await axios.post(
+                        `${CONFIG.JIRA_SERVER}/rest/api/3/issues`,
+                        {
+                            fields: {
+                                project: { key: projectKey },
+                                parent: { key: parentIssueKey },
+                                issuetype: { name: 'Sub-task' },
+                                summary: subtaskData.summary,
+                                description: {
+                                    version: 3,
+                                    type: 'doc',
+                                    content: [
+                                        {
+                                            type: 'paragraph',
+                                            content: [
+                                                {
+                                                    type: 'text',
+                                                    text: subtaskData.description,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            },
+                        },
+                        {
+                            auth: {
+                                username: 'api_token',
+                                password: CONFIG.JIRA_PAT,
+                            },
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                            },
+                        }
+                    );
+                    return response.data;
+                } catch (error) {
+                    throw new Error(`Failed to create subtask: ${error.response?.data?.errorMessages?.[0] || error.message}`);
+                }
+            },
+        };
+
+        const aiService = {
+            generateDescription: async (parentDescription, userInput) => {
+                try {
+                    const prompt = `You are a task decomposition expert for a Jira project management system.
+
+Given a parent task and a user request, generate a clear and concise task summary and description.
+
+Parent Task Description:
+${parentDescription || 'No description available'}
+
+User Request:
+${userInput}
+
+Generate a JSON response with the following structure:
+{
+  "summary": "A clear, concise summary (max 255 characters)",
+  "description": "A detailed description of the subtask with clear objectives and acceptance criteria"
+}
+
+Make sure the summary is specific and actionable, and the description includes:
+- What needs to be done
+- Why it needs to be done
+- Acceptance criteria or success metrics`;
+
+                    const response = await axios.post(
+                        `${CONFIG.OPENAI_BASE_URL}/chat/completions`,
+                        {
+                            model: CONFIG.AI_MODEL_NAME,
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: 'You are a helpful assistant that generates clear, detailed task descriptions for software development projects.',
+                                },
+                                {
+                                    role: 'user',
+                                    content: prompt,
+                                },
+                            ],
+                            temperature: 0.7,
+                            top_p: 0.9,
+                            max_tokens: 1000,
+                        },
+                        {
+                            headers: {
+                                'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`,
+                                'Content-Type': 'application/json',
+                            },
+                        }
+                    );
+
+                    const content = response.data.choices[0].message.content;
+                    const jsonMatch = content.match(/\{[\s\S]*\}/);
+                    
+                    if (jsonMatch) {
+                        return JSON.parse(jsonMatch[0]);
+                    }
+                    
+                    throw new Error('Failed to parse AI response');
+                } catch (error) {
+                    throw new Error(`AI Error: ${error.message}`);
+                }
+            },
+        };
+
+        // Components
+        function SubtaskForm({ onSubmit, loading }) {
+            const [formData, setFormData] = useState({
+                userInput: '',
+                bobot: '',
+                storyPoint: '',
+                systemAnalyst: '',
+                programmer: '',
+                programmerEnd: '',
+                qcEnd: '',
+            });
+            const [errors, setErrors] = useState({});
+
+            const validateForm = () => {
+                const newErrors = {};
+                if (!formData.userInput.trim()) newErrors.userInput = 'Task description is required';
+                if (!formData.bobot) newErrors.bobot = 'Bobot task is required';
+                if (!formData.storyPoint) newErrors.storyPoint = 'Story point is required';
+                if (!formData.systemAnalyst) newErrors.systemAnalyst = 'System analyst is required';
+                if (!formData.programmer) newErrors.programmer = 'Programmer is required';
+                if (!formData.programmerEnd) newErrors.programmerEnd = 'Programmer end date is required';
+                if (!formData.qcEnd) newErrors.qcEnd = 'QC end date is required';
+                setErrors(newErrors);
+                return Object.keys(newErrors).length === 0;
+            };
+
+            const handleChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => ({ ...prev, [name]: value }));
+                if (errors[name]) {
+                    setErrors(prev => ({ ...prev, [name]: '' }));
+                }
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (validateForm()) {
+                    onSubmit(formData);
+                }
+            };
+
+            return (
+                <form className="subtask-form" onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label htmlFor="userInput">Task Description *</label>
+                        <textarea
+                            id="userInput"
+                            name="userInput"
+                            value={formData.userInput}
+                            onChange={handleChange}
+                            placeholder="Describe what needs to be done..."
+                            rows="4"
+                            disabled={loading}
+                        />
+                        {errors.userInput && <span className="error">{errors.userInput}</span>}
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="bobot">Bobot Task *</label>
+                            <select
+                                id="bobot"
+                                name="bobot"
+                                value={formData.bobot}
+                                onChange={handleChange}
+                                disabled={loading}
+                            >
+                                <option value="">-- Select --</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                            {errors.bobot && <span className="error">{errors.bobot}</span>}
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="storyPoint">Story Point *</label>
+                            <input
+                                type="number"
+                                id="storyPoint"
+                                name="storyPoint"
+                                value={formData.storyPoint}
+                                onChange={handleChange}
+                                placeholder="e.g., 5"
+                                min="0"
+                                disabled={loading}
+                            />
+                            {errors.storyPoint && <span className="error">{errors.storyPoint}</span>}
+                        </div>
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="systemAnalyst">System Analyst *</label>
+                            <input
+                                type="text"
+                                id="systemAnalyst"
+                                name="systemAnalyst"
+                                value={formData.systemAnalyst}
+                                onChange={handleChange}
+                                placeholder="Your name or assignee"
+                                disabled={loading}
+                            />
+                            {errors.systemAnalyst && <span className="error">{errors.systemAnalyst}</span>}
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="programmer">Programmer *</label>
+                            <input
+                                type="text"
+                                id="programmer"
+                                name="programmer"
+                                value={formData.programmer}
+                                onChange={handleChange}
+                                placeholder="Programmer name"
+                                disabled={loading}
+                            />
+                            {errors.programmer && <span className="error">{errors.programmer}</span>}
+                        </div>
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="programmerEnd">Programmer End Date *</label>
+                            <input
+                                type="datetime-local"
+                                id="programmerEnd"
+                                name="programmerEnd"
+                                value={formData.programmerEnd}
+                                onChange={handleChange}
+                                disabled={loading}
+                            />
+                            {errors.programmerEnd && <span className="error">{errors.programmerEnd}</span>}
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="qcEnd">QC End Date *</label>
+                            <input
+                                type="datetime-local"
+                                id="qcEnd"
+                                name="qcEnd"
+                                value={formData.qcEnd}
+                                onChange={handleChange}
+                                disabled={loading}
+                            />
+                            {errors.qcEnd && <span className="error">{errors.qcEnd}</span>}
+                        </div>
+                    </div>
+
+                    <button type="submit" className="submit-btn" disabled={loading}>
+                        {loading ? 'Creating Subtask...' : 'Generate & Create Subtask'}
+                    </button>
+                </form>
+            );
+        }
+
+        function SubtaskGenerator() {
+            const [parentIssue, setParentIssue] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+            const [success, setSuccess] = useState(null);
+            const [parentIssueKey, setParentIssueKey] = useState('');
+            const [searchLoading, setSearchLoading] = useState(false);
+
+            const handleSearchIssue = async (issueKey) => {
+                setSearchLoading(true);
+                setError(null);
+                try {
+                    const issue = await jiraService.getIssue(issueKey);
+                    setParentIssue(issue);
+                } catch (err) {
+                    setError(err.message);
+                    setParentIssue(null);
+                } finally {
+                    setSearchLoading(false);
+                }
+            };
+
+            const handleGenerateAndCreate = async (formData) => {
+                setLoading(true);
+                setError(null);
+                setSuccess(null);
+
+                try {
+                    const aiResponse = await aiService.generateDescription(
+                        parentIssue.fields.description || 'No description available',
+                        formData.userInput
+                    );
+
+                    const subtaskPayload = {
+                        summary: aiResponse.summary,
+                        description: aiResponse.description,
+                        bobot: formData.bobot,
+                        storyPoint: formData.storyPoint,
+                        systemAnalyst: formData.systemAnalyst,
+                        programmer: formData.programmer,
+                        programmerEnd: formData.programmerEnd,
+                        qcEnd: formData.qcEnd,
+                    };
+
+                    const result = await jiraService.createSubtask(parentIssueKey, subtaskPayload);
+                    setSuccess({
+                        message: 'Subtask created successfully!',
+                        issueKey: result.key,
+                    });
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="subtask-generator">
+                    <div className="header">
+                        <h1>Jira Subtask Generator</h1>
+                        <p>Generate and create subtasks with AI assistance</p>
+                    </div>
+
+                    <div className="main-content">
+                        {!parentIssue ? (
+                            <div className="search-section">
+                                <h2>Step 1: Search Parent Issue</h2>
+                                <div className="search-input-group">
+                                    <input
+                                        type="text"
+                                        placeholder="e.g., PCC-1439"
+                                        value={parentIssueKey}
+                                        onChange={(e) => setParentIssueKey(e.target.value)}
+                                        disabled={searchLoading}
+                                    />
+                                    <button
+                                        onClick={() => handleSearchIssue(parentIssueKey)}
+                                        disabled={!parentIssueKey || searchLoading}
+                                    >
+                                        {searchLoading ? 'Searching...' : 'Search'}
+                                    </button>
+                                </div>
+                                {error && <div className="error-message">{error}</div>}
+                            </div>
+                        ) : (
+                            <>
+                                <div className="issue-summary">
+                                    <h2>Parent Issue: {parentIssue.key}</h2>
+                                    <p className="issue-title">{parentIssue.fields.summary}</p>
+                                    <button
+                                        className="change-issue-btn"
+                                        onClick={() => {
+                                            setParentIssue(null);
+                                            setParentIssueKey('');
+                                            setError(null);
+                                        }}
+                                    >
+                                        Change Issue
+                                    </button>
+                                </div>
+
+                                <div className="form-section">
+                                    <h2>Step 2: Generate Subtask</h2>
+                                    <SubtaskForm
+                                        onSubmit={handleGenerateAndCreate}
+                                        loading={loading}
+                                    />
+                                </div>
+
+                                {error && <div className="error-message">{error}</div>}
+                                {success && (
+                                    <div className="success-message">
+                                        <p>{success.message}</p>
+                                        <p>Issue Key: <strong>{success.issueKey}</strong></p>
+                                        <button
+                                            className="create-another-btn"
+                                            onClick={() => {
+                                                setSuccess(null);
+                                                setError(null);
+                                            }}
+                                        >
+                                            Create Another Subtask
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            return (
+                <div className="app-container">
+                    <SubtaskGenerator />
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

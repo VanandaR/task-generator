@@ -1,0 +1,214 @@
+.subtask-generator {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 40px;
+  max-width: 800px;
+  width: 100%;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+  border-bottom: 3px solid #667eea;
+  padding-bottom: 20px;
+}
+
+.header h1 {
+  color: #333;
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.header p {
+  color: #666;
+  font-size: 14px;
+}
+
+.main-content {
+  min-height: 400px;
+}
+
+.search-section {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.search-section h2 {
+  color: #333;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.search-input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-input-group input {
+  flex: 1;
+  padding: 12px 15px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+.search-input-group input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.search-input-group input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.search-input-group button {
+  padding: 12px 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.search-input-group button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+}
+
+.search-input-group button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.issue-summary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.issue-summary h2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.issue-title {
+  font-size: 16px;
+  margin-bottom: 15px;
+  opacity: 0.9;
+}
+
+.change-issue-btn {
+  padding: 8px 15px;
+  background: white;
+  color: #667eea;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.change-issue-btn:hover {
+  transform: translateY(-2px);
+}
+
+.form-section {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.form-section h2 {
+  color: #333;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.error-message {
+  background-color: #fee;
+  border-left: 4px solid #f44;
+  color: #c33;
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 20px;
+  animation: slideUp 0.3s ease-out;
+}
+
+.success-message {
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+  border-left: 4px solid #22c55e;
+  color: #015f0e;
+  padding: 20px;
+  border-radius: 6px;
+  margin-top: 20px;
+  animation: slideUp 0.3s ease-out;
+}
+
+.success-message p {
+  margin-bottom: 10px;
+}
+
+.success-message strong {
+  font-weight: 600;
+}
+
+.create-another-btn {
+  padding: 10px 20px;
+  background: white;
+  color: #015f0e;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: transform 0.2s;
+}
+
+.create-another-btn:hover {
+  transform: translateY(-2px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .subtask-generator {
+    padding: 20px;
+  }
+
+  .header h1 {
+    font-size: 20px;
+  }
+
+  .search-input-group {
+    flex-direction: column;
+  }
+
+  .search-input-group button {
+    width: 100%;
+  }
+}

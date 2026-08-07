@@ -1,0 +1,12 @@
+🚀 AI-powered Jira subtask generator that automatically creates subtasks with intelligent descriptions using Gemini 3 Flash. Search parent issues, fill in task details, and generate professional subtasks with one click.
+
+Features:
+✨ Smart issue search & AI description generation
+📋 Comprehensive form with mandatory fields (Bobot, Story Point, Dates)
+⚡ One-click creation with real-time feedback
+🎨 Modern UI with smooth animations
+✅ Form validation & error handling
+
+Tech: React 18, Node.js, Jira REST API v3, LiteLLM/Gemini, Axios
+
+Perfect for Agile teams breaking down parent tasks into manageable subtasks automatically.
