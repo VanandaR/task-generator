@@ -4,7 +4,7 @@ const JIRA_SERVER = process.env.REACT_APP_JIRA_SERVER;
 const JIRA_PAT = process.env.REACT_APP_JIRA_PAT;
 
 const jiraAPI = axios.create({
-  baseURL: `${JIRA_SERVER}/rest/api/3`,
+  baseURL: `${JIRA_SERVER}/rest/api/2`,
   auth: {
     username: 'api_token',
     password: JIRA_PAT,
@@ -17,7 +17,7 @@ const jiraAPI = axios.create({
 
 export const createSubtask = async (parentIssueKey, subtaskData) => {
   try {
-    const response = await jiraAPI.post('/issues', {
+    const response = await jiraAPI.post('/issue', {
       fields: {
         project: { key: parentIssueKey.split('-')[0] },
         parent: { key: parentIssueKey },
@@ -55,7 +55,7 @@ export const createSubtask = async (parentIssueKey, subtaskData) => {
 
 export const getIssue = async (issueKey) => {
   try {
-    const response = await jiraAPI.get(`/issues/${issueKey}`);
+    const response = await jiraAPI.get(`/issue/${issueKey}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching issue:', error);

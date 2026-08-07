@@ -1,348 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jira Subtask Generator</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-                sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        #root {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .app-container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .subtask-generator {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 800px;
-            width: 100%;
-            margin: 0 auto;
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 20px;
-        }
-
-        .header h1 {
-            color: #333;
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-
-        .header p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .main-content {
-            min-height: 400px;
-        }
-
-        .search-section h2,
-        .form-section h2 {
-            color: #333;
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-
-        .search-input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .search-input-group input {
-            flex: 1;
-            padding: 12px 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        .search-input-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .search-input-group input:disabled {
-            background-color: #f5f5f5;
-            cursor: not-allowed;
-        }
-
-        .search-input-group button,
-        .change-issue-btn,
-        .submit-btn,
-        .create-another-btn {
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .search-input-group button:hover:not(:disabled),
-        .change-issue-btn:hover,
-        .submit-btn:hover:not(:disabled),
-        .create-another-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .search-input-group button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .issue-summary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .issue-summary h2 {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-
-        .issue-title {
-            font-size: 16px;
-            margin-bottom: 15px;
-            opacity: 0.9;
-        }
-
-        .change-issue-btn {
-            padding: 8px 15px;
-            background: white;
-            color: #667eea;
-        }
-
-        .form-section {
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .subtask-form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            padding: 12px 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: border-color 0.3s, background-color 0.3s;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-            background-color: #f9f7ff;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .form-group input:disabled,
-        .form-group textarea:disabled,
-        .form-group select:disabled {
-            background-color: #f5f5f5;
-            cursor: not-allowed;
-            color: #999;
-        }
-
-        .form-group .error {
-            color: #f44;
-            font-size: 12px;
-            margin-top: 6px;
-            font-weight: 500;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .submit-btn {
-            padding: 14px 30px;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-
-        .submit-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        .error-message {
-            background-color: #fee;
-            border-left: 4px solid #f44;
-            color: #c33;
-            padding: 15px;
-            border-radius: 6px;
-            margin-top: 20px;
-            animation: slideUp 0.3s ease-out;
-        }
-
-        .success-message {
-            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
-            border-left: 4px solid #22c55e;
-            color: #015f0e;
-            padding: 20px;
-            border-radius: 6px;
-            margin-top: 20px;
-            animation: slideUp 0.3s ease-out;
-        }
-
-        .success-message p {
-            margin-bottom: 10px;
-        }
-
-        .success-message strong {
-            font-weight: 600;
-        }
-
-        .create-another-btn {
-            padding: 10px 20px;
-            background: white;
-            color: #015f0e;
-            margin-top: 10px;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        .loading {
-            text-align: center;
-            color: #666;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 600px) {
-            .subtask-generator {
-                padding: 20px;
-            }
-
-            .header h1 {
-                font-size: 20px;
-            }
-
-            .search-input-group {
-                flex-direction: column;
-            }
-
-            .search-input-group button {
-                width: 100%;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            .form-group input,
-            .form-group textarea,
-            .form-group select {
-                font-size: 16px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
@@ -421,7 +76,7 @@
         };
 
         const aiService = {
-            generateSubtask: async (userInput) => {
+            generateSubtask: async (userInput, config) => {
                 try {
                     const prompt = `Kamu adalah expert task decomposition untuk Jira project management.
 
@@ -447,18 +102,42 @@ ${userInput}
 
 PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambahan.`;
 
-                    const response = await axios.post('/api/ai/generate', {
-                        messages: [
-                            {
-                                role: 'system',
-                                content: 'Kamu adalah assistant yang membantu generate deskripsi task Jira yang terstruktur dan konsisten untuk project software development. Selalu respond dalam format JSON saja.',
-                            },
-                            {
-                                role: 'user',
-                                content: prompt,
-                            },
-                        ],
-                    });
+                    const messages = [
+                        {
+                            role: 'system',
+                            content: 'Kamu adalah assistant yang membantu generate deskripsi task Jira yang terstruktur dan konsisten untuk project software development. Selalu respond dalam format JSON saja.',
+                        },
+                        {
+                            role: 'user',
+                            content: prompt,
+                        },
+                    ];
+
+                    let response;
+                    // Try direct call from browser first (in case backend has ETIMEDOUT network issues)
+                    if (config?.aiBaseUrl && config?.aiApiKey) {
+                        try {
+                            response = await axios.post(`${config.aiBaseUrl}/chat/completions`, {
+                                model: config.aiModelName || 'vertex_ai/gemini-3-flash-preview',
+                                messages: messages,
+                                temperature: 0.7,
+                                top_p: 0.9,
+                                max_tokens: 1000,
+                            }, {
+                                headers: {
+                                    'Authorization': `Bearer ${config.aiApiKey}`,
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                        } catch (directErr) {
+                            console.warn("Direct AI call failed, falling back to proxy...", directErr);
+                            // Fallback to proxy
+                            response = await axios.post('/api/ai/generate', { messages });
+                        }
+                    } else {
+                        // Use proxy if config isn't available
+                        response = await axios.post('/api/ai/generate', { messages });
+                    }
 
                     const content = response.data.choices[0].message.content;
                     const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -772,6 +451,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
             const [error, setError] = useState(null);
             const [success, setSuccess] = useState(null);
             const [jiraServer, setJiraServer] = useState('');
+            const [aiConfig, setAiConfig] = useState(null);
             const [currentUser, setCurrentUser] = useState(null);
             const [reviewData, setReviewData] = useState(null);
             const [lastUserInput, setLastUserInput] = useState('');
@@ -780,6 +460,11 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
             useEffect(() => {
                 axios.get('/api/config').then(res => {
                     setJiraServer(res.data.jiraServer || '');
+                    setAiConfig({
+                        aiBaseUrl: res.data.aiBaseUrl,
+                        aiApiKey: res.data.aiApiKey,
+                        aiModelName: res.data.aiModelName
+                    });
                 }).catch(() => {});
 
                 jiraService.getCurrentUser().then(user => {
@@ -812,7 +497,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                 setLastUserInput(userInput);
 
                 try {
-                    const aiResponse = await aiService.generateSubtask(userInput);
+                    const aiResponse = await aiService.generateSubtask(userInput, aiConfig);
                     
                     const today = new Date();
                     const devEndDate = addWorkingDays(today, aiResponse.devDays || 3);
@@ -993,6 +678,4 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
-    </script>
-</body>
-</html>
+    
