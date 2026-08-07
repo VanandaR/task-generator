@@ -430,54 +430,73 @@
         };
 
         const aiService = {
-            generateSubtask: async (userInput) => {
+            generateDescription: async (userInput) => {
                 try {
-                    const prompt = `Kamu adalah expert task decomposition untuk Jira project management.
+                    const prompt = `You are an expert task decomposition specialist for Jira project management.
 
-Berdasarkan deskripsi task dari user, generate detail subtask dengan format JSON berikut:
+Based on the user's task description, generate a professional task summary and description in JSON format:
 
 {
-  "summary": "Summary singkat dan actionable (max 255 karakter, dalam Bahasa Indonesia)",
-  "description": "## Deskripsi\\n[Penjelasan detail apa yang harus dikerjakan]\\n\\n## Latar Belakang\\n[Kenapa task ini perlu dikerjakan]\\n\\n## Langkah Pengerjaan\\n1. [Langkah 1]\\n2. [Langkah 2]\\n3. [Langkah 3]\\n\\n## Acceptance Criteria\\n- [ ] [Kriteria 1]\\n- [ ] [Kriteria 2]\\n- [ ] [Kriteria 3]",
-  "bobot": "High|Medium|Low",
-  "storyPoint": 5,
-  "devDays": 3,
-  "qcDays": 1
+  "summary": "Brief, actionable summary (max 255 characters)",
+  "description": "Detailed description with clear objectives, steps, and acceptance criteria"
 }
 
-Panduan estimasi:
-- storyPoint: 1-2 (sangat simple), 3-5 (medium), 8-13 (complex), 21+ (sangat complex)
-- bobot: "Low" (bug fix kecil, UI tweak), "Medium" (fitur standar), "High" (fitur complex/critical)  
-- devDays: estimasi hari kerja development (1-2 simple, 3-5 medium, 5-10 complex)
-- qcDays: estimasi hari kerja QC/testing (1 simple, 2-3 medium, 3-5 complex)
+Guidelines:
+- Summary: Clear, specific, action-oriented
+- Description: Include what needs to be done, why, and success criteria
+- Language: Use English
+- Keep it professional but concise
 
-Deskripsi task dari user:
+User's task description:
 ${userInput}
 
-PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambahan.`;
+IMPORTANT: Return ONLY valid JSON. No markdown, no code blocks, no additional text.`;
 
-                    const response = await axios.post('/api/ai/generate', {
-                        messages: [
-                            {
-                                role: 'system',
-                                content: 'Kamu adalah assistant yang membantu generate deskripsi task Jira yang terstruktur dan konsisten untuk project software development. Selalu respond dalam format JSON saja.',
+                    const response = await axios.post(
+                        `${CONFIG.OPENAI_BASE_URL}/chat/completions`,
+                        {
+                            model: CONFIG.AI_MODEL_NAME,
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: 'You are a helpful assistant that generates clear, detailed task descriptions for software development projects. Always respond with valid JSON only.',
+                                },
+                                {
+                                    role: 'user',
+                                    content: prompt,
+                                },
+                            ],
+                            temperature: 0.7,
+                            max_tokens: 1000,
+                        },
+                        {
+                            headers: {
+                                'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`,
+                                'Content-Type': 'application/json',
                             },
-                            {
-                                role: 'user',
-                                content: prompt,
-                            },
-                        ],
-                    });
+                        }
+                    );
 
-                    const content = response.data.choices[0].message.content;
-                    const jsonMatch = content.match(/\{[\s\S]*\}/);
-
-                    if (jsonMatch) {
-                        return JSON.parse(jsonMatch[0]);
+                    const content = response.data.choices[0].message.content.trim();
+                    
+                    // Try to parse JSON
+                    try {
+                        // First try raw parse
+                        return JSON.parse(content);
+                    } catch (e1) {
+                        // Try to extract JSON from content
+                        const jsonMatch = content.match(/\{[\s\S]*\}/);
+                        if (jsonMatch) {
+                            try {
+                                return JSON.parse(jsonMatch[0]);
+                            } catch (e2) {
+                                throw new Error('Invalid JSON in response: ' + jsonMatch[0].substring(0, 100));
+                            }
+                        }
+                        throw new Error('No JSON found in response: ' + content.substring(0, 200));
                     }
-
-                    return JSON.parse(content); // Try raw parse if no match
                 } catch (error) {
+                    console.error('AI Error Details:', error);
                     throw new Error(`AI Error: ${error.message}`);
                 }
             },
@@ -821,19 +840,19 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                 setLastUserInput(userInput);
 
                 try {
-                    const aiResponse = await aiService.generateSubtask(userInput);
+                    const aiResponse = await aiService.generateDescription(userInput);
 
                     const today = new Date();
-                    const devEndDate = addWorkingDays(today, aiResponse.devDays || 3);
-                    const qcEndDate = addWorkingDays(devEndDate, aiResponse.qcDays || 1);
+                    const devEndDate = addWorkingDays(today, 3); // Default 3 days
+                    const qcEndDate = addWorkingDays(devEndDate, 1); // Default 1 day
 
                     const userName = currentUser?.displayName || currentUser?.name || '';
 
                     setReviewData({
-                        summary: aiResponse.summary,
-                        description: aiResponse.description,
-                        bobot: aiResponse.bobot || 'Medium',
-                        storyPoint: String(aiResponse.storyPoint || 5),
+                        summary: aiResponse.summary || 'Subtask',
+                        description: aiResponse.description || userInput,
+                        bobot: 'Medium', // Default
+                        storyPoint: '5', // Default
                         systemAnalyst: userName,
                         programmer: userName,
                         programmerEnd: formatDateTimeLocal(devEndDate),
