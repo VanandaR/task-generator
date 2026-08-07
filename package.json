@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "load-env": "node load-env.js",
     "webpack-start": "webpack serve --mode development",
     "build": "webpack --mode production"
   },

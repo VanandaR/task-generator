@@ -347,18 +347,20 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Configuration - Load from window or environment
+        // Configuration - Load from localStorage, window, or environment
         const CONFIG = {
-            JIRA_SERVER: window.CONFIG?.JIRA_SERVER || localStorage.getItem('JIRA_SERVER') || '',
-            JIRA_PAT: window.CONFIG?.JIRA_PAT || localStorage.getItem('JIRA_PAT') || '',
-            OPENAI_API_KEY: window.CONFIG?.OPENAI_API_KEY || localStorage.getItem('OPENAI_API_KEY') || '',
-            OPENAI_BASE_URL: window.CONFIG?.OPENAI_BASE_URL || localStorage.getItem('OPENAI_BASE_URL') || '',
-            AI_MODEL_NAME: window.CONFIG?.AI_MODEL_NAME || localStorage.getItem('AI_MODEL_NAME') || '',
+            JIRA_SERVER: localStorage.getItem('JIRA_SERVER') || window.CONFIG?.JIRA_SERVER || '',
+            JIRA_PAT: localStorage.getItem('JIRA_PAT') || window.CONFIG?.JIRA_PAT || '',
+            OPENAI_API_KEY: localStorage.getItem('OPENAI_API_KEY') || window.CONFIG?.OPENAI_API_KEY || '',
+            OPENAI_BASE_URL: localStorage.getItem('OPENAI_BASE_URL') || window.CONFIG?.OPENAI_BASE_URL || '',
+            AI_MODEL_NAME: localStorage.getItem('AI_MODEL_NAME') || window.CONFIG?.AI_MODEL_NAME || '',
         };
 
-        // Show warning if not configured
+        // Show warning and redirect if not configured
         if (!CONFIG.JIRA_SERVER || !CONFIG.JIRA_PAT || !CONFIG.OPENAI_API_KEY) {
-            console.warn('Configuration not found. Please set environment variables or CONFIG object.');
+            console.warn('Configuration not found. Redirecting to setup page...');
+            // Optional: Uncomment to auto-redirect to setup
+            // window.location.href = '/setup-credentials.html';
         }
 
         // Services
