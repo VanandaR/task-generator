@@ -71,6 +71,42 @@ The application requires the following environment variables in `.env` file:
 
 See `.env.example` for a template.
 
+## Quick Start - 3 Steps
+
+### 1️⃣ Setup Credentials
+
+**Option A: Using Setup UI (Easiest)**
+```bash
+npm start
+# Then open: http://localhost:3000/setup-credentials.html
+# Fill in your credentials and click "Save"
+```
+
+**Option B: Using Console Commands**
+```bash
+# Run this in browser console (F12)
+localStorage.setItem('JIRA_SERVER', 'https://jira.beacukai.go.id');
+localStorage.setItem('JIRA_PAT', 'your_token');
+localStorage.setItem('OPENAI_API_KEY', 'your_key');
+localStorage.setItem('OPENAI_BASE_URL', 'https://api.openai.com/v1');
+localStorage.setItem('AI_MODEL_NAME', 'gpt-4-turbo-preview');
+```
+
+**Option C: Using .env File**
+```bash
+# Edit .env file with your credentials
+npm run load-env
+# Then use setup-credentials.html to load from .env
+```
+
+### 2️⃣ Start the Application
+```bash
+npm start
+# Access at http://localhost:3000
+```
+
+### 3️⃣ Create Subtasks!
+
 ## How to Use
 
 1. **Search for Parent Issue**

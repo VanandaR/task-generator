@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,6 +56,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -285,6 +287,7 @@
             from {
                 opacity: 0;
             }
+
             to {
                 opacity: 1;
             }
@@ -307,8 +310,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         @media (max-width: 600px) {
@@ -341,6 +349,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="root"></div>
 
@@ -462,11 +471,11 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
 
                     const content = response.data.choices[0].message.content;
                     const jsonMatch = content.match(/\{[\s\S]*\}/);
-                    
+
                     if (jsonMatch) {
                         return JSON.parse(jsonMatch[0]);
                     }
-                    
+
                     return JSON.parse(content); // Try raw parse if no match
                 } catch (error) {
                     throw new Error(`AI Error: ${error.message}`);
@@ -498,13 +507,13 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                             placeholder="Contoh: Buat halaman login dengan validasi email dan password, integrasi dengan API auth..."
                             rows="5"
                             disabled={loading}
-                            style={{fontSize: '15px'}}
+                            style={{ fontSize: '15px' }}
                         />
                     </div>
                     <button type="submit" className="submit-btn" disabled={!userInput.trim() || loading}>
                         {loading ? (
-                            <span style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'}}>
-                                <span className="spinner" style={{width: '20px', height: '20px', margin: 0, borderWidth: '3px'}}></span>
+                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                                <span className="spinner" style={{ width: '20px', height: '20px', margin: 0, borderWidth: '3px' }}></span>
                                 AI sedang generate...
                             </span>
                         ) : '🤖 Generate dengan AI'}
@@ -513,7 +522,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
             );
         }
 
-                // Step 3: Preview & Review AI-generated results
+        // Step 3: Preview & Review AI-generated results
         function ReviewForm({ formData, onChange, onSubmit, onRegenerate, loading }) {
             const [isEditing, setIsEditing] = useState(false);
             const [errors, setErrors] = useState({});
@@ -556,7 +565,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
             // ===== PREVIEW MODE =====
             if (!isEditing) {
                 return (
-                    <div style={{animation: 'fadeIn 0.3s ease-out'}}>
+                    <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
                         {/* Metrics Cards */}
                         <div style={{
                             display: 'grid',
@@ -570,8 +579,8 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                                 padding: '16px',
                                 textAlign: 'center',
                             }}>
-                                <div style={{fontSize: '12px', color: '#1565c0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'}}>Story Point</div>
-                                <div style={{fontSize: '32px', fontWeight: 700, color: '#0d47a1', marginTop: '4px'}}>{formData.storyPoint || '-'}</div>
+                                <div style={{ fontSize: '12px', color: '#1565c0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Story Point</div>
+                                <div style={{ fontSize: '32px', fontWeight: 700, color: '#0d47a1', marginTop: '4px' }}>{formData.storyPoint || '-'}</div>
                             </div>
                             <div style={{
                                 background: `linear-gradient(135deg, ${formData.bobot === 'High' ? '#ffebee, #ffcdd2' : formData.bobot === 'Medium' ? '#fff3e0, #ffe0b2' : '#e8f5e9, #c8e6c9'})`,
@@ -579,8 +588,8 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                                 padding: '16px',
                                 textAlign: 'center',
                             }}>
-                                <div style={{fontSize: '12px', color: bobotColor[formData.bobot] || '#666', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'}}>Bobot</div>
-                                <div style={{fontSize: '24px', fontWeight: 700, color: bobotColor[formData.bobot] || '#333', marginTop: '4px'}}>{formData.bobot || '-'}</div>
+                                <div style={{ fontSize: '12px', color: bobotColor[formData.bobot] || '#666', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Bobot</div>
+                                <div style={{ fontSize: '24px', fontWeight: 700, color: bobotColor[formData.bobot] || '#333', marginTop: '4px' }}>{formData.bobot || '-'}</div>
                             </div>
                             <div style={{
                                 background: 'linear-gradient(135deg, #f3e5f5, #e1bee7)',
@@ -588,8 +597,8 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                                 padding: '16px',
                                 textAlign: 'center',
                             }}>
-                                <div style={{fontSize: '12px', color: '#7b1fa2', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'}}>Assignee</div>
-                                <div style={{fontSize: '14px', fontWeight: 600, color: '#4a148c', marginTop: '8px'}}>{formData.programmer || '-'}</div>
+                                <div style={{ fontSize: '12px', color: '#7b1fa2', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assignee</div>
+                                <div style={{ fontSize: '14px', fontWeight: 600, color: '#4a148c', marginTop: '8px' }}>{formData.programmer || '-'}</div>
                             </div>
                         </div>
 
@@ -601,8 +610,8 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                             padding: '16px',
                             marginBottom: '16px',
                         }}>
-                            <div style={{fontSize: '12px', color: '#666', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase'}}>Summary</div>
-                            <div style={{fontSize: '16px', fontWeight: 600, color: '#333'}}>{formData.summary}</div>
+                            <div style={{ fontSize: '12px', color: '#666', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase' }}>Summary</div>
+                            <div style={{ fontSize: '16px', fontWeight: 600, color: '#333' }}>{formData.summary}</div>
                         </div>
 
                         {/* Description */}
@@ -613,7 +622,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                             padding: '16px',
                             marginBottom: '16px',
                         }}>
-                            <div style={{fontSize: '12px', color: '#666', fontWeight: 600, marginBottom: '10px', textTransform: 'uppercase'}}>Description</div>
+                            <div style={{ fontSize: '12px', color: '#666', fontWeight: 600, marginBottom: '10px', textTransform: 'uppercase' }}>Description</div>
                             <pre style={{
                                 whiteSpace: 'pre-wrap',
                                 wordBreak: 'break-word',
@@ -632,23 +641,23 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                             gap: '12px',
                             marginBottom: '20px',
                         }}>
-                            <div style={{background: '#fff8e1', borderRadius: '8px', padding: '12px'}}>
-                                <div style={{fontSize: '12px', color: '#f57f17', fontWeight: 600}}>📅 Dev End Date</div>
-                                <div style={{fontSize: '14px', fontWeight: 600, color: '#333', marginTop: '4px'}}>{formatDate(formData.programmerEnd)}</div>
+                            <div style={{ background: '#fff8e1', borderRadius: '8px', padding: '12px' }}>
+                                <div style={{ fontSize: '12px', color: '#f57f17', fontWeight: 600 }}>📅 Dev End Date</div>
+                                <div style={{ fontSize: '14px', fontWeight: 600, color: '#333', marginTop: '4px' }}>{formatDate(formData.programmerEnd)}</div>
                             </div>
-                            <div style={{background: '#e8eaf6', borderRadius: '8px', padding: '12px'}}>
-                                <div style={{fontSize: '12px', color: '#283593', fontWeight: 600}}>🧪 QC End Date</div>
-                                <div style={{fontSize: '14px', fontWeight: 600, color: '#333', marginTop: '4px'}}>{formatDate(formData.qcEnd)}</div>
+                            <div style={{ background: '#e8eaf6', borderRadius: '8px', padding: '12px' }}>
+                                <div style={{ fontSize: '12px', color: '#283593', fontWeight: 600 }}>🧪 QC End Date</div>
+                                <div style={{ fontSize: '14px', fontWeight: 600, color: '#333', marginTop: '4px' }}>{formatDate(formData.qcEnd)}</div>
                             </div>
                         </div>
 
                         {/* Action Buttons */}
-                        <div style={{display: 'flex', gap: '10px'}}>
+                        <div style={{ display: 'flex', gap: '10px' }}>
                             <button
                                 className="submit-btn"
                                 onClick={handleSubmit}
                                 disabled={loading}
-                                style={{flex: 1}}
+                                style={{ flex: 1 }}
                             >
                                 {loading ? 'Creating Subtask...' : '🚀 Create Subtask di Jira'}
                             </button>
@@ -656,7 +665,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                                 className="submit-btn"
                                 onClick={() => setIsEditing(true)}
                                 disabled={loading}
-                                style={{flex: '0 0 auto', background: 'linear-gradient(135deg, #78909c 0%, #546e7a 100%)', padding: '14px 20px'}}
+                                style={{ flex: '0 0 auto', background: 'linear-gradient(135deg, #78909c 0%, #546e7a 100%)', padding: '14px 20px' }}
                             >
                                 ✏️ Edit
                             </button>
@@ -664,7 +673,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                                 className="submit-btn"
                                 onClick={onRegenerate}
                                 disabled={loading}
-                                style={{flex: '0 0 auto', background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)', padding: '14px 20px'}}
+                                style={{ flex: '0 0 auto', background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)', padding: '14px 20px' }}
                             >
                                 🔄 Re-generate
                             </button>
@@ -696,7 +705,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
 
                     <div className="form-group">
                         <label htmlFor="description">Description *</label>
-                        <textarea id="description" name="description" value={formData.description || ''} onChange={handleChange} rows="10" disabled={loading} style={{fontFamily: 'monospace', fontSize: '13px'}} />
+                        <textarea id="description" name="description" value={formData.description || ''} onChange={handleChange} rows="10" disabled={loading} style={{ fontFamily: 'monospace', fontSize: '13px' }} />
                         {errors.description && <span className="error">{errors.description}</span>}
                     </div>
 
@@ -744,8 +753,8 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                         </div>
                     </div>
 
-                    <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
-                        <button type="submit" className="submit-btn" disabled={loading} style={{flex: 1}}>
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                        <button type="submit" className="submit-btn" disabled={loading} style={{ flex: 1 }}>
                             {loading ? 'Creating Subtask...' : '🚀 Create Subtask di Jira'}
                         </button>
                         <button
@@ -753,7 +762,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                             className="submit-btn"
                             onClick={() => setIsEditing(false)}
                             disabled={loading}
-                            style={{flex: '0 0 auto', background: 'linear-gradient(135deg, #78909c 0%, #546e7a 100%)', padding: '14px 20px'}}
+                            style={{ flex: '0 0 auto', background: 'linear-gradient(135deg, #78909c 0%, #546e7a 100%)', padding: '14px 20px' }}
                         >
                             👁️ Preview
                         </button>
@@ -780,7 +789,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
             useEffect(() => {
                 axios.get('/api/config').then(res => {
                     setJiraServer(res.data.jiraServer || '');
-                }).catch(() => {});
+                }).catch(() => { });
 
                 jiraService.getCurrentUser().then(user => {
                     if (user) {
@@ -813,7 +822,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
 
                 try {
                     const aiResponse = await aiService.generateSubtask(userInput);
-                    
+
                     const today = new Date();
                     const devEndDate = addWorkingDays(today, aiResponse.devDays || 3);
                     const qcEndDate = addWorkingDays(devEndDate, aiResponse.qcDays || 1);
@@ -884,7 +893,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                         <h1>Jira Subtask Generator</h1>
                         <p>Generate dan buat subtask otomatis dengan AI</p>
                         {currentUser && (
-                            <p style={{fontSize: '12px', color: '#999', marginTop: '8px'}}>
+                            <p style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
                                 👤 Logged in as: <strong>{currentUser.displayName || currentUser.name}</strong>
                             </p>
                         )}
@@ -894,7 +903,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                         {!isKeySet ? (
                             <div className="search-section">
                                 <h2>Step 1: Set Parent Issue</h2>
-                                <p style={{color: '#666', marginBottom: '15px', fontSize: '14px'}}>
+                                <p style={{ color: '#666', marginBottom: '15px', fontSize: '14px' }}>
                                     Paste link Jira atau ketik issue key untuk dijadikan parent subtask.
                                 </p>
                                 <div className="search-input-group">
@@ -918,7 +927,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                                     {jiraServer && (
                                         <p className="issue-title">
                                             <a href={`${jiraServer}/browse/${parentIssueKey}`} target="_blank" rel="noopener noreferrer"
-                                               style={{color: 'white', textDecoration: 'underline'}}>
+                                                style={{ color: 'white', textDecoration: 'underline' }}>
                                                 Open in Jira ↗
                                             </a>
                                         </p>
@@ -939,7 +948,7 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
                                 )}
 
                                 {reviewData && !success && (
-                                    <div className="form-section" style={{animation: 'fadeIn 0.3s ease-out'}}>
+                                    <div className="form-section" style={{ animation: 'fadeIn 0.3s ease-out' }}>
                                         <h2>Step 3: Review & Create</h2>
                                         <ReviewForm
                                             formData={reviewData}
@@ -955,22 +964,22 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
 
                                 {success && (
                                     <div className="success-message">
-                                        <p style={{fontSize: '18px', marginBottom: '10px'}}>🎉 {success.message}</p>
+                                        <p style={{ fontSize: '18px', marginBottom: '10px' }}>🎉 {success.message}</p>
                                         <p>Issue Key: <strong>{success.issueKey}</strong></p>
                                         {success.jiraUrl && (
-                                            <p style={{marginTop: '8px'}}>
+                                            <p style={{ marginTop: '8px' }}>
                                                 <a href={success.jiraUrl} target="_blank" rel="noopener noreferrer"
-                                                   style={{color: '#015f0e', fontWeight: 600}}>
+                                                    style={{ color: '#015f0e', fontWeight: 600 }}>
                                                     View in Jira ↗
                                                 </a>
                                             </p>
                                         )}
-                                        <div style={{display: 'flex', gap: '10px', marginTop: '15px'}}>
+                                        <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                                             <button className="create-another-btn" onClick={handleCreateAnother}>
                                                 + Buat Subtask Lagi (Parent Sama)
                                             </button>
                                             <button className="create-another-btn" onClick={resetAll}
-                                                    style={{color: '#667eea'}}>
+                                                style={{ color: '#667eea' }}>
                                                 🔄 Ganti Parent Issue
                                             </button>
                                         </div>
@@ -995,4 +1004,5 @@ PENTING: Response HANYA JSON, tanpa markdown code block, tanpa penjelasan tambah
         root.render(<App />);
     </script>
 </body>
+
 </html>
