@@ -586,46 +586,73 @@ PENTING:
         // ========== COMPONENTS ==========
 
         // Step 2: User describes what needs to be done
-        function TaskInputForm({ onGenerate, loading }) {
-            const [userInput, setUserInput] = useState('');
+         function TaskInputForm({ onGenerate, loading }) {
+             const [userInput, setUserInput] = useState('');
+             const [tempLabels, setTempLabels] = useState(selectedLabels);
 
-            const handleSubmit = (e) => {
-                e.preventDefault();
-                if (userInput.trim()) {
-                    onGenerate(userInput);
-                }
-            };
+             const handleSubmit = (e) => {
+                 e.preventDefault();
+                 if (userInput.trim()) {
+                     setSelectedLabels(tempLabels);
+                     onGenerate(userInput);
+                 }
+             };
 
-            return (
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="userInput">Deskripsikan task yang perlu dikerjakan *</label>
-                        <textarea
-                            id="userInput"
-                            value={userInput}
-                            onChange={(e) => setUserInput(e.target.value)}
-                            placeholder="Contoh: Buat halaman login dengan validasi email dan password, integrasi dengan API auth..."
-                            rows="5"
-                            disabled={loading}
-                            style={{ fontSize: '15px' }}
-                        />
-                    </div>
-                    <button type="submit" className="submit-btn" disabled={!userInput.trim() || loading}>
-                        {loading ? (
-                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                                <span className="spinner" style={{ width: '20px', height: '20px', margin: 0, borderWidth: '3px' }}></span>
-                                AI sedang generate...
-                            </span>
-                        ) : '🤖 Generate dengan AI'}
-                    </button>
-                </form>
-            );
-        }
+             return (
+                 <form onSubmit={handleSubmit}>
+                     <div className="form-group">
+                         <label htmlFor="userInput">Deskripsikan task yang perlu dikerjakan *</label>
+                         <textarea
+                             id="userInput"
+                             value={userInput}
+                             onChange={(e) => setUserInput(e.target.value)}
+                             placeholder="Contoh: Buat halaman login dengan validasi email dan password, integrasi dengan API auth..."
+                             rows="5"
+                             disabled={loading}
+                             style={{ fontSize: '15px' }}
+                         />
+                     </div>
+                     
+                     <div className="form-group" style={{ marginBottom: '15px' }}>
+                         <label style={{ fontWeight: 600, marginBottom: '10px' }}>Labels (Optional)</label>
+                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                             {AVAILABLE_LABELS.map(label => (
+                                 <label key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                                     <input
+                                         type="checkbox"
+                                         checked={tempLabels.includes(label)}
+                                         onChange={(e) => {
+                                             if (e.target.checked) {
+                                                 setTempLabels([...tempLabels, label]);
+                                             } else {
+                                                 setTempLabels(tempLabels.filter(l => l !== label));
+                                             }
+                                         }}
+                                         disabled={loading}
+                                     />
+                                     {label}
+                                 </label>
+                             ))}
+                         </div>
+                     </div>
+                     
+                     <button type="submit" className="submit-btn" disabled={!userInput.trim() || loading}>
+                         {loading ? (
+                             <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                                 <span className="spinner" style={{ width: '20px', height: '20px', margin: 0, borderWidth: '3px' }}></span>
+                                 AI sedang generate...
+                             </span>
+                         ) : '🤖 Generate dengan AI'}
+                     </button>
+                 </form>
+             );
+         }
 
-        // Step 3: Preview & Review AI-generated results
-        function ReviewForm({ formData, onChange, onSubmit, onRegenerate, loading }) {
-            const [isEditing, setIsEditing] = useState(false);
-            const [errors, setErrors] = useState({});
+         // Step 3: Preview & Review AI-generated results
+         function ReviewForm({ formData, onChange, onSubmit, onRegenerate, loading }) {
+             const [isEditing, setIsEditing] = useState(false);
+             const [errors, setErrors] = useState({});
+             const [editingLabels, setEditingLabels] = useState(selectedLabels);
 
             const validateForm = () => {
                 const newErrors = {};
@@ -641,11 +668,12 @@ PENTING:
                 return Object.keys(newErrors).length === 0;
             };
 
-            const handleSubmit = () => {
-                if (validateForm()) {
-                    onSubmit(formData);
-                }
-            };
+             const handleSubmit = () => {
+                 if (validateForm()) {
+                     setSelectedLabels(editingLabels);
+                     onSubmit(formData);
+                 }
+             };
 
             const handleChange = (e) => {
                 const { name, value } = e.target;
@@ -735,23 +763,48 @@ PENTING:
                         </div>
 
                         {/* Dates */}
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr 1fr',
-                            gap: '12px',
-                            marginBottom: '20px',
-                        }}>
-                            <div style={{ background: '#fff8e1', borderRadius: '8px', padding: '12px' }}>
-                                <div style={{ fontSize: '12px', color: '#f57f17', fontWeight: 600 }}>📅 Dev End Date</div>
-                                <div style={{ fontSize: '14px', fontWeight: 600, color: '#333', marginTop: '4px' }}>{formatDate(formData.programmerEnd)}</div>
-                            </div>
-                            <div style={{ background: '#e8eaf6', borderRadius: '8px', padding: '12px' }}>
-                                <div style={{ fontSize: '12px', color: '#283593', fontWeight: 600 }}>🧪 QC End Date</div>
-                                <div style={{ fontSize: '14px', fontWeight: 600, color: '#333', marginTop: '4px' }}>{formatDate(formData.qcEnd)}</div>
-                            </div>
-                        </div>
+                         <div style={{
+                             display: 'grid',
+                             gridTemplateColumns: '1fr 1fr',
+                             gap: '12px',
+                             marginBottom: '20px',
+                         }}>
+                             <div style={{ background: '#fff8e1', borderRadius: '8px', padding: '12px' }}>
+                                 <div style={{ fontSize: '12px', color: '#f57f17', fontWeight: 600 }}>📅 Dev End Date</div>
+                                 <div style={{ fontSize: '14px', fontWeight: 600, color: '#333', marginTop: '4px' }}>{formatDate(formData.programmerEnd)}</div>
+                             </div>
+                             <div style={{ background: '#e8eaf6', borderRadius: '8px', padding: '12px' }}>
+                                 <div style={{ fontSize: '12px', color: '#283593', fontWeight: 600 }}>🧪 QC End Date</div>
+                                 <div style={{ fontSize: '14px', fontWeight: 600, color: '#333', marginTop: '4px' }}>{formatDate(formData.qcEnd)}</div>
+                             </div>
+                         </div>
 
-                        {/* Action Buttons */}
+                         {/* Labels */}
+                         {selectedLabels.length > 0 && (
+                             <div style={{
+                                 background: '#f5f5f5',
+                                 borderRadius: '8px',
+                                 padding: '12px',
+                                 marginBottom: '20px',
+                             }}>
+                                 <div style={{ fontSize: '12px', color: '#666', fontWeight: 600, marginBottom: '8px' }}>Labels:</div>
+                                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                     {selectedLabels.map(label => (
+                                         <span key={label} style={{ 
+                                             backgroundColor: '#667eea', 
+                                             color: 'white', 
+                                             padding: '4px 10px', 
+                                             borderRadius: '4px',
+                                             fontSize: '12px'
+                                         }}>
+                                             {label}
+                                         </span>
+                                     ))}
+                                 </div>
+                             </div>
+                         )}
+
+                         {/* Action Buttons */}
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <button
                                 className="submit-btn"
@@ -853,29 +906,27 @@ PENTING:
                         </div>
 
                         <div className="form-group">
-                            <label style={{ fontWeight: 600, marginBottom: '10px' }}>Labels</label>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                {AVAILABLE_LABELS.map(label => (
-                                    <label key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.labels && formData.labels.includes(label)}
-                                            onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    const newLabels = [...(formData.labels || []), label];
-                                                    onChange({ ...formData, labels: newLabels });
-                                                } else {
-                                                    const newLabels = formData.labels.filter(l => l !== label);
-                                                    onChange({ ...formData, labels: newLabels });
-                                                }
-                                            }}
-                                            disabled={loading}
-                                        />
-                                        {label}
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
+                             <label style={{ fontWeight: 600, marginBottom: '10px' }}>Labels</label>
+                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                 {AVAILABLE_LABELS.map(label => (
+                                     <label key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                                         <input
+                                             type="checkbox"
+                                             checked={editingLabels.includes(label)}
+                                             onChange={(e) => {
+                                                 if (e.target.checked) {
+                                                     setEditingLabels([...editingLabels, label]);
+                                                 } else {
+                                                     setEditingLabels(editingLabels.filter(l => l !== label));
+                                                 }
+                                             }}
+                                             disabled={loading}
+                                         />
+                                         {label}
+                                     </label>
+                                 ))}
+                             </div>
+                         </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
@@ -900,13 +951,8 @@ PENTING:
         // Available labels
         const AVAILABLE_LABELS = [
             'PascaUAT-Simaudi',
+            'Piloting-Simpul',
             'IKU-Vananda',
-            'Bug-Critical',
-            'Bug-High',
-            'Bug-Medium',
-            'Feature-New',
-            'Feature-Enhancement',
-            'Documentation',
         ];
 
         function SubtaskGenerator() {
@@ -1006,20 +1052,18 @@ PENTING:
                 setSuccess(null);
 
                 try {
-                    // Parse labels from string
-                    const labelList = formData.labels ? formData.labels.split(',').map(l => l.trim()).filter(l => l) : [];
-
-                    const result = await jiraService.createSubtask(parentIssueKey, {
-                        summary: formData.summary,
-                        description: formData.description,
-                        bobot: formData.bobot,
-                        storyPoint: formData.storyPoint,
-                        systemAnalyst: formData.systemAnalyst,
-                        programmer: formData.programmer,
-                        programmerEnd: formData.programmerEnd,
-                        qcEnd: formData.qcEnd,
-                        labels: labelList,
-                    });
+                     // Use selectedLabels array directly
+                     const result = await jiraService.createSubtask(parentIssueKey, {
+                         summary: formData.summary,
+                         description: formData.description,
+                         bobot: formData.bobot,
+                         storyPoint: formData.storyPoint,
+                         systemAnalyst: formData.systemAnalyst,
+                         programmer: formData.programmer,
+                         programmerEnd: formData.programmerEnd,
+                         qcEnd: formData.qcEnd,
+                         labels: selectedLabels,
+                     });
 
                     setSuccess({
                         message: 'Subtask berhasil dibuat!',
@@ -1118,20 +1162,38 @@ PENTING:
                             </div>
                         ) : (
                             <>
-                                <div className="issue-summary">
-                                    <h2>Parent Issue: {parentIssueKey}</h2>
-                                    {jiraServer && (
-                                        <p className="issue-title">
-                                            <a href={`${jiraServer}/browse/${parentIssueKey}`} target="_blank" rel="noopener noreferrer"
-                                                style={{ color: 'white', textDecoration: 'underline' }}>
-                                                Open in Jira ↗
-                                            </a>
-                                        </p>
-                                    )}
-                                    <button className="change-issue-btn" onClick={resetAll}>
-                                        Change Issue
-                                    </button>
-                                </div>
+                                 <div className="issue-summary">
+                                     <h2>Parent Issue: {parentIssueKey}</h2>
+                                     {jiraServer && (
+                                         <p className="issue-title">
+                                             <a href={`${jiraServer}/browse/${parentIssueKey}`} target="_blank" rel="noopener noreferrer"
+                                                 style={{ color: 'white', textDecoration: 'underline' }}>
+                                                 Open in Jira ↗
+                                             </a>
+                                         </p>
+                                     )}
+                                     {selectedLabels.length > 0 && (
+                                         <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
+                                             <p style={{ fontSize: '13px', fontWeight: 600, color: '#666', marginBottom: '8px' }}>Labels:</p>
+                                             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                                 {selectedLabels.map(label => (
+                                                     <span key={label} style={{ 
+                                                         backgroundColor: '#667eea', 
+                                                         color: 'white', 
+                                                         padding: '4px 10px', 
+                                                         borderRadius: '4px',
+                                                         fontSize: '12px'
+                                                     }}>
+                                                         {label}
+                                                     </span>
+                                                 ))}
+                                             </div>
+                                         </div>
+                                     )}
+                                     <button className="change-issue-btn" onClick={resetAll}>
+                                         Change Issue
+                                     </button>
+                                 </div>
 
                                 {!reviewData && !success && (
                                     <div className="form-section">
