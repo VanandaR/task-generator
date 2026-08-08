@@ -903,35 +903,15 @@ PENTING:
                 });
             }, []);
 
-            const handleSetIssue = async () => {
+            const handleSetIssue = () => {
                 setError(null);
                 const key = parseIssueKey(inputValue);
                 if (!key || !/^[A-Z][A-Z0-9]+-\d+$/i.test(key)) {
                     setError('Format tidak valid. Gunakan format: PCC-1439 atau https://jira.beacukai.go.id/browse/PCC-1439');
                     return;
                 }
-                
-                // Fetch parent issue data
-                try {
-                    const response = await axios.get(
-                        `${CONFIG.JIRA_SERVER}/rest/api/3/issues/${key}`,
-                        {
-                            auth: {
-                                username: 'api_token',
-                                password: CONFIG.JIRA_PAT,
-                            },
-                            headers: {
-                                'Accept': 'application/json',
-                            },
-                        }
-                    );
-                    setParentIssueData(response.data);
-                    setParentIssueKey(key);
-                    setIsKeySet(true);
-                } catch (err) {
-                    setError(`Gagal fetch issue: ${err.message}`);
-                    setParentIssueData(null);
-                }
+                setParentIssueKey(key);
+                setIsKeySet(true);
             };
 
             const handleKeyPress = (e) => {
@@ -968,10 +948,6 @@ PENTING:
                     else if (aiResponse.complexity === 'Complex') storyPoint = '8';
                     else if (aiResponse.complexity === 'Very Complex') storyPoint = '13';
 
-                    // Get labels dari parent issue
-                    const labels = parentIssueData?.fields?.labels || [];
-                    const labelString = labels.join(', ');
-
                     setReviewData({
                         summary: aiResponse.summary || 'Subtask',
                         description: aiResponse.description || userInput,
@@ -981,7 +957,7 @@ PENTING:
                         programmer: userName,
                         programmerEnd: formatDateTimeLocal(devEndDate),
                         qcEnd: formatDateTimeLocal(qcEndDate),
-                        labels: labelString,
+                        labels: '',
                     });
                 } catch (err) {
                     setError(err.message);
