@@ -850,11 +850,6 @@ PENTING:
                             <input type="datetime-local" id="qcEnd" name="qcEnd" value={formData.qcEnd || ''} onChange={handleChange} disabled={loading} />
                             {errors.qcEnd && <span className="error">{errors.qcEnd}</span>}
                         </div>
-
-                        <div className="form-group">
-                            <label htmlFor="labels">Labels</label>
-                            <input type="text" id="labels" name="labels" value={formData.labels || ''} onChange={handleChange} placeholder="PascaUAT-Simaudi, IKU-Vananda" disabled={loading} />
-                        </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
@@ -880,6 +875,7 @@ PENTING:
             const [parentIssueKey, setParentIssueKey] = useState('');
             const [parentIssueData, setParentIssueData] = useState(null);
             const [inputValue, setInputValue] = useState('');
+            const [labelsInput, setLabelsInput] = useState('');
             const [isKeySet, setIsKeySet] = useState(false);
             const [loading, setLoading] = useState(false);
             const [generating, setGenerating] = useState(false);
@@ -957,7 +953,7 @@ PENTING:
                         programmer: userName,
                         programmerEnd: formatDateTimeLocal(devEndDate),
                         qcEnd: formatDateTimeLocal(qcEndDate),
-                        labels: '',
+                        labels: labelsInput,
                     });
                 } catch (err) {
                     setError(err.message);
@@ -1036,18 +1032,33 @@ PENTING:
                                 <p style={{ color: '#666', marginBottom: '15px', fontSize: '14px' }}>
                                     Paste link Jira atau ketik issue key untuk dijadikan parent subtask.
                                 </p>
-                                <div className="search-input-group">
+                                <div style={{ marginBottom: '15px' }}>
+                                    <div className="search-input-group">
+                                        <input
+                                            type="text"
+                                            placeholder="Paste URL Jira, e.g. https://jira.beacukai.go.id/browse/PCC-1439"
+                                            value={inputValue}
+                                            onChange={(e) => setInputValue(e.target.value)}
+                                            onKeyPress={handleKeyPress}
+                                        />
+                                        <button onClick={handleSetIssue} disabled={!inputValue}>
+                                            Set Issue
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="form-group" style={{ marginBottom: '15px' }}>
+                                    <label htmlFor="step1Labels">Labels (Optional)</label>
                                     <input
                                         type="text"
-                                        placeholder="Paste URL Jira, e.g. https://jira.beacukai.go.id/browse/PCC-1439"
-                                        value={inputValue}
-                                        onChange={(e) => setInputValue(e.target.value)}
-                                        onKeyPress={handleKeyPress}
+                                        id="step1Labels"
+                                        placeholder="e.g. PascaUAT-Simaudi, IKU-Vananda"
+                                        value={labelsInput}
+                                        onChange={(e) => setLabelsInput(e.target.value)}
+                                        style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }}
                                     />
-                                    <button onClick={handleSetIssue} disabled={!inputValue}>
-                                        Set Issue
-                                    </button>
                                 </div>
+
                                 {error && <div className="error-message">{error}</div>}
                             </div>
                         ) : (
