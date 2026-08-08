@@ -61,7 +61,7 @@ const server = http.createServer(async (req, res) => {
       const jiraUrl = new URL(`${JIRA_SERVER}/rest/api/2/issue`);
 
       const postData = JSON.stringify(body.payload);
-      const result = await proxyRequest(
+      const       result = await proxyRequest(
         {
           protocol: jiraUrl.protocol,
           hostname: jiraUrl.hostname,
@@ -78,6 +78,9 @@ const server = http.createServer(async (req, res) => {
         postData
       );
 
+      if (result.statusCode >= 400) {
+        console.error('Jira Error Response:', result.body);
+      }
       res.writeHead(result.statusCode, { 'Content-Type': 'application/json' });
       res.end(result.body);
     } catch (error) {
