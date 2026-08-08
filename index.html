@@ -442,25 +442,25 @@
         const aiService = {
             generateDescription: async (userInput) => {
                 try {
-                    const prompt = `You are an expert task decomposition specialist for Jira project management.
+                    const prompt = `Kamu adalah expert dalam decomposition task untuk Jira project management.
 
-Based on the user's task description, generate a professional task summary and description in JSON format:
+Berdasarkan deskripsi task dari user, generate ringkasan dan deskripsi task yang profesional dalam format JSON:
 
 {
-  "summary": "Brief, actionable summary (max 255 characters)",
-  "description": "Detailed description with clear objectives, steps, and acceptance criteria"
+  "summary": "Ringkasan singkat dan jelas (maksimal 255 karakter, dalam Bahasa Indonesia)",
+  "description": "Deskripsi detail dengan penjelasan apa yang harus dikerjakan, latar belakang, langkah-langkah, dan acceptance criteria"
 }
 
-Guidelines:
-- Summary: Clear, specific, action-oriented
-- Description: Include what needs to be done, why, and success criteria
-- Language: Use English
-- Keep it professional but concise
+Panduan:
+- Summary: Jelas, spesifik, dan action-oriented dalam Bahasa Indonesia
+- Description: Sertakan apa yang perlu dikerjakan, kenapa perlu dikerjakan, langkah-langkah detail, dan acceptance criteria dalam Bahasa Indonesia
+- Gunakan format Markdown untuk deskripsi (gunakan ##, -, [ ] untuk checklist)
+- Profesional namun mudah dipahami
 
-User's task description:
+Deskripsi task dari user:
 ${userInput}
 
-IMPORTANT: Return ONLY valid JSON. No markdown, no code blocks, no additional text.`;
+PENTING: Return HANYA JSON yang valid. Tidak boleh ada markdown code block, penjelasan tambahan, atau teks apapun di luar JSON.`;
 
                     const response = await axios.post(
                         `${CONFIG.OPENAI_BASE_URL}/chat/completions`,
@@ -469,7 +469,7 @@ IMPORTANT: Return ONLY valid JSON. No markdown, no code blocks, no additional te
                             messages: [
                                 {
                                     role: 'system',
-                                    content: 'You are a helpful assistant that generates clear, detailed task descriptions for software development projects. Always respond with valid JSON only.',
+                                    content: 'Kamu adalah assistant yang membantu generate deskripsi task Jira yang jelas dan terstruktur untuk project software development. Selalu respond dengan JSON yang valid saja, tanpa markdown code block atau penjelasan tambahan.',
                                 },
                                 {
                                     role: 'user',
@@ -873,8 +873,8 @@ IMPORTANT: Return ONLY valid JSON. No markdown, no code blocks, no additional te
                     const aiResponse = await aiService.generateDescription(userInput);
 
                     const today = new Date();
-                    const devEndDate = addWorkingDays(today, 3); // Default 3 days
-                    const qcEndDate = addWorkingDays(devEndDate, 1); // Default 1 day
+                    const devEndDate = addWorkingDays(today, 3); // Default 3 days untuk programmer
+                    const qcEndDate = addWorkingDays(devEndDate, 10); // Default 10 working days (2 minggu) untuk QC
 
                     const userName = currentUser?.displayName || currentUser?.name || '';
 
