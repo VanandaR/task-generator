@@ -851,6 +851,31 @@ PENTING:
                             <input type="datetime-local" id="qcEnd" name="qcEnd" value={formData.qcEnd || ''} onChange={handleChange} disabled={loading} />
                             {errors.qcEnd && <span className="error">{errors.qcEnd}</span>}
                         </div>
+
+                        <div className="form-group">
+                            <label style={{ fontWeight: 600, marginBottom: '10px' }}>Labels</label>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                {AVAILABLE_LABELS.map(label => (
+                                    <label key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.labels && formData.labels.includes(label)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    const newLabels = [...(formData.labels || []), label];
+                                                    onChange({ ...formData, labels: newLabels });
+                                                } else {
+                                                    const newLabels = formData.labels.filter(l => l !== label);
+                                                    onChange({ ...formData, labels: newLabels });
+                                                }
+                                            }}
+                                            disabled={loading}
+                                        />
+                                        {label}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
@@ -872,11 +897,23 @@ PENTING:
         }
 
         // ========== MAIN COMPONENT ==========
+        // Available labels
+        const AVAILABLE_LABELS = [
+            'PascaUAT-Simaudi',
+            'IKU-Vananda',
+            'Bug-Critical',
+            'Bug-High',
+            'Bug-Medium',
+            'Feature-New',
+            'Feature-Enhancement',
+            'Documentation',
+        ];
+
         function SubtaskGenerator() {
             const [parentIssueKey, setParentIssueKey] = useState('');
             const [parentIssueData, setParentIssueData] = useState(null);
             const [inputValue, setInputValue] = useState('');
-            const [labelsInput, setLabelsInput] = useState('');
+            const [selectedLabels, setSelectedLabels] = useState([]);
             const [isKeySet, setIsKeySet] = useState(false);
             const [loading, setLoading] = useState(false);
             const [generating, setGenerating] = useState(false);
@@ -954,7 +991,7 @@ PENTING:
                         programmer: userName,
                         programmerEnd: formatDateTimeLocal(devEndDate),
                         qcEnd: formatDateTimeLocal(qcEndDate),
-                        labels: labelsInput,
+                        labels: selectedLabels,
                     });
                 } catch (err) {
                     setError(err.message);
@@ -1056,15 +1093,25 @@ PENTING:
                                 </div>
 
                                 <div className="form-group" style={{ marginBottom: '15px' }}>
-                                    <label htmlFor="step1Labels">Labels (Optional)</label>
-                                    <input
-                                        type="text"
-                                        id="step1Labels"
-                                        placeholder="e.g. PascaUAT-Simaudi, IKU-Vananda"
-                                        value={labelsInput}
-                                        onChange={(e) => setLabelsInput(e.target.value)}
-                                        style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }}
-                                    />
+                                    <label style={{ fontWeight: 600, marginBottom: '10px' }}>Labels (Optional)</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                        {AVAILABLE_LABELS.map(label => (
+                                            <label key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedLabels.includes(label)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedLabels([...selectedLabels, label]);
+                                                        } else {
+                                                            setSelectedLabels(selectedLabels.filter(l => l !== label));
+                                                        }
+                                                    }}
+                                                />
+                                                {label}
+                                            </label>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 {error && <div className="error-message">{error}</div>}
