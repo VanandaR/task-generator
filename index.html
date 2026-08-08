@@ -444,18 +444,27 @@
                 try {
                     const prompt = `Kamu adalah expert dalam decomposition task untuk Jira project management.
 
-Berdasarkan deskripsi task dari user, generate ringkasan dan deskripsi task yang profesional dalam format JSON:
+Berdasarkan deskripsi task dari user, analyze kesusahan/kompleksitas task dan generate ringkasan, deskripsi, serta estimasi waktu dalam format JSON:
 
 {
   "summary": "Ringkasan singkat dan jelas (maksimal 255 karakter, dalam Bahasa Indonesia)",
-  "description": "Deskripsi detail dengan penjelasan apa yang harus dikerjakan, latar belakang, langkah-langkah, dan acceptance criteria"
+  "description": "Deskripsi detail dengan penjelasan apa yang harus dikerjakan, latar belakang, langkah-langkah, dan acceptance criteria",
+  "complexity": "Simple|Medium|Complex|Very Complex",
+  "estimatedDays": 3
 }
 
-Panduan:
+Panduan Kompleksitas dan Estimasi (dalam hari kerja):
+- Simple: Task sederhana tanpa integrasi (validasi form, UI tweak, bug fix kecil) → 1-2 hari
+- Medium: Task standar dengan beberapa komponen (CRUD, integrasi 1-2 API, testing) → 3-5 hari
+- Complex: Task besar dengan multiple features/integrasi (payment, auth system, dashboard) → 5-8 hari
+- Very Complex: Task sangat kompleks dengan research/performance tuning/security (performance optimization, security audit) → 8-15 hari
+
+Panduan Response:
 - Summary: Jelas, spesifik, dan action-oriented dalam Bahasa Indonesia
 - Description: Sertakan apa yang perlu dikerjakan, kenapa perlu dikerjakan, langkah-langkah detail, dan acceptance criteria dalam Bahasa Indonesia
 - Gunakan format Markdown untuk deskripsi (gunakan ##, -, [ ] untuk checklist)
-- Profesional namun mudah dipahami
+- Complexity: Analyze dengan detail berdasarkan scope, integrasi, dan research yang dibutuhkan
+- EstimatedDays: Jadilah realistis dalam estimasi
 
 Deskripsi task dari user:
 ${userInput}
@@ -873,16 +882,31 @@ PENTING: Return HANYA JSON yang valid. Tidak boleh ada markdown code block, penj
                     const aiResponse = await aiService.generateDescription(userInput);
 
                     const today = new Date();
-                    const devEndDate = addWorkingDays(today, 3); // Default 3 days untuk programmer
-                    const qcEndDate = addWorkingDays(devEndDate, 10); // Default 10 working days (2 minggu) untuk QC
+                    // Gunakan estimasi dari AI, atau default 3 hari jika tidak ada
+                    const estimatedDays = aiResponse.estimatedDays || 3;
+                    const devEndDate = addWorkingDays(today, estimatedDays);
+                    // QC selalu 10 working days (2 minggu) setelah programmer selesai
+                    const qcEndDate = addWorkingDays(devEndDate, 10);
 
                     const userName = currentUser?.displayName || currentUser?.name || '';
+
+                    // Map complexity ke bobot
+                    let bobot = 'Medium';
+                    if (aiResponse.complexity === 'Simple') bobot = 'Low';
+                    else if (aiResponse.complexity === 'Complex') bobot = 'High';
+                    else if (aiResponse.complexity === 'Very Complex') bobot = 'High';
+
+                    // Map complexity ke story point
+                    let storyPoint = '5';
+                    if (aiResponse.complexity === 'Simple') storyPoint = '2';
+                    else if (aiResponse.complexity === 'Complex') storyPoint = '8';
+                    else if (aiResponse.complexity === 'Very Complex') storyPoint = '13';
 
                     setReviewData({
                         summary: aiResponse.summary || 'Subtask',
                         description: aiResponse.description || userInput,
-                        bobot: 'Medium', // Default
-                        storyPoint: '5', // Default
+                        bobot: bobot,
+                        storyPoint: storyPoint,
                         systemAnalyst: userName,
                         programmer: userName,
                         programmerEnd: formatDateTimeLocal(devEndDate),
