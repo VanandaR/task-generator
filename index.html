@@ -414,16 +414,37 @@
             createSubtask: async (parentIssueKey, subtaskData) => {
                 try {
                     const projectKey = parentIssueKey.split('-')[0];
+
+                    // Map bobot form (High/Medium/Low) ke Boot Task Jira (Complex/Average/Simple)
+                    const bobotToBootTask = { High: 'Complex', Medium: 'Average', Low: 'Simple' };
+                    const bootTaskValue = bobotToBootTask[subtaskData.bobot] || 'Average';
+
+                    // Format tanggal ke YYYY-MM-DD untuk Jira date field
+                    const formatJiraDate = (datetimeLocal) => {
+                        if (!datetimeLocal) return null;
+                        return datetimeLocal.substring(0, 10); // ambil YYYY-MM-DD dari datetime-local
+                    };
+
+                    const fields = {
+                        project: { key: projectKey },
+                        parent: { key: parentIssueKey },
+                        issuetype: { name: 'Sub-task' },
+                        summary: subtaskData.summary,
+                        description: subtaskData.description,
+                        // Custom fields yang required di Jira
+                        customfield_10644: { name: subtaskData.systemAnalyst },  // System Analyst
+                        customfield_10665: formatJiraDate(subtaskData.programmerEnd),  // Programmer END
+                        customfield_10667: formatJiraDate(subtaskData.qcEnd),  // QC End
+                        customfield_10670: { value: bootTaskValue },  // Boot Task (Complex/Average/Simple)
+                    };
+
+                    // Tambahkan assignee jika ada programmer
+                    if (subtaskData.programmer) {
+                        fields.assignee = { name: subtaskData.programmer };
+                    }
+
                     const response = await axios.post('/api/jira/create-subtask', {
-                        payload: {
-                            fields: {
-                                project: { key: projectKey },
-                                parent: { key: parentIssueKey },
-                                issuetype: { name: 'Sub-task' },
-                                summary: subtaskData.summary,
-                                description: subtaskData.description,
-                            },
-                        },
+                        payload: { fields },
                     });
 
                     if (response.data.errors) {
@@ -444,32 +465,43 @@
                 try {
                     const prompt = `Kamu adalah expert dalam decomposition task untuk Jira project management.
 
-Berdasarkan deskripsi task dari user, analyze kesusahan/kompleksitas task dan generate ringkasan, deskripsi, serta estimasi waktu dalam format JSON:
+Berdasarkan deskripsi task dari user, analyze kompleksitas task dan generate ringkasan, deskripsi, serta estimasi waktu dalam format JSON:
 
 {
-  "summary": "Ringkasan singkat dan jelas (maksimal 255 karakter, dalam Bahasa Indonesia)",
-  "description": "Deskripsi detail dengan penjelasan apa yang harus dikerjakan, latar belakang, langkah-langkah, dan acceptance criteria",
+  "summary": "[FE|BE|Mobile|QA|DevOps] - Ringkasan singkat dan jelas (maksimal 200 karakter, dalam Bahasa Indonesia)",
+  "description": "## Deskripsi\\nPenjelasan apa yang harus dikerjakan\\n\\n## Permasalahan\\nMasalah atau konteks mengapa task ini penting\\n\\n## Langkah Pengerjaan\\n1. Langkah 1\\n2. Langkah 2\\n3. Langkah 3\\n\\n## Acceptance Criteria\\n- [ ] Kriteria 1\\n- [ ] Kriteria 2",
   "complexity": "Simple|Medium|Complex|Very Complex",
-  "estimatedDays": 3
+  "estimatedDays": 14
 }
 
-Panduan Kompleksitas dan Estimasi (dalam hari kerja):
-- Simple: Task sederhana tanpa integrasi (validasi form, UI tweak, bug fix kecil) → 1-2 hari
-- Medium: Task standar dengan beberapa komponen (CRUD, integrasi 1-2 API, testing) → 3-5 hari
-- Complex: Task besar dengan multiple features/integrasi (payment, auth system, dashboard) → 5-8 hari
-- Very Complex: Task sangat kompleks dengan research/performance tuning/security (performance optimization, security audit) → 8-15 hari
+PENTING TENTANG SUMMARY:
+- Gunakan prefix kategori: [FE] untuk Frontend, [BE] untuk Backend, [Mobile] untuk Mobile, [QA], atau [DevOps]
+- Contoh: "[FE] - Buat form login dengan validasi email"
+- Contoh: "[BE] - Implementasi API endpoint untuk user authentication"
 
-Panduan Response:
-- Summary: Jelas, spesifik, dan action-oriented dalam Bahasa Indonesia
-- Description: Sertakan apa yang perlu dikerjakan, kenapa perlu dikerjakan, langkah-langkah detail, dan acceptance criteria dalam Bahasa Indonesia
-- Gunakan format Markdown untuk deskripsi (gunakan ##, -, [ ] untuk checklist)
-- Complexity: Analyze dengan detail berdasarkan scope, integrasi, dan research yang dibutuhkan
-- EstimatedDays: Jadilah realistis dalam estimasi
+Panduan Kompleksitas dan Estimasi (dalam hari kerja):
+- Simple: Validasi form, UI tweak, bug fix kecil → 3-5 hari
+- Medium: CRUD, integrasi 1-2 API, testing → 7-10 hari
+- Complex: Payment gateway, auth system, dashboard → 10-14 hari
+- Very Complex: Performance optimization, security audit → 14-20 hari
+
+Panduan Description (PENTING - ikuti format ini):
+- Gunakan bahasa sehari-hari yang simpel, JANGAN terlalu formal
+- Tulis langsung to the point, programmer harus langsung paham apa yang dikerjakan
+- Struktur:
+  ## Deskripsi - Apa yang harus dikerjakan
+  ## Permasalahan - Konteks/masalah yang ingin diatasi
+  ## Langkah Pengerjaan - Langkah-langkah konkrit (pakai nomor 1, 2, 3...)
+  ## Acceptance Criteria - Checklist untuk verifikasi task selesai
 
 Deskripsi task dari user:
 ${userInput}
 
-PENTING: Return HANYA JSON yang valid. Tidak boleh ada markdown code block, penjelasan tambahan, atau teks apapun di luar JSON.`;
+PENTING: 
+- Return HANYA JSON yang valid
+- Tidak boleh ada markdown code block, gambar, atau teks apapun di luar JSON
+- Gunakan escape untuk newline di description: \\n untuk enter
+- EstimatedDays minimum 7 hari (1.4 minggu), maksimum 20 hari (4 minggu)`;
 
                     const response = await axios.post(
                         `${CONFIG.OPENAI_BASE_URL}/chat/completions`,
@@ -478,7 +510,7 @@ PENTING: Return HANYA JSON yang valid. Tidak boleh ada markdown code block, penj
                             messages: [
                                 {
                                     role: 'system',
-                                    content: 'Kamu adalah assistant yang membantu generate deskripsi task Jira yang jelas dan terstruktur untuk project software development. Selalu respond dengan JSON yang valid saja, tanpa markdown code block atau penjelasan tambahan.',
+                                    content: 'Kamu adalah assistant yang membantu generate deskripsi task Jira yang jelas dan terstruktur untuk project software development. PENTING: Selalu respond dengan JSON yang valid saja, tanpa markdown code block, tanpa gambar, tanpa penjelasan tambahan. Hanya JSON murni.',
                                 },
                                 {
                                     role: 'user',
@@ -882,13 +914,12 @@ PENTING: Return HANYA JSON yang valid. Tidak boleh ada markdown code block, penj
                     const aiResponse = await aiService.generateDescription(userInput);
 
                     const today = new Date();
-                    // Gunakan estimasi dari AI, atau default 3 hari jika tidak ada
-                    const estimatedDays = aiResponse.estimatedDays || 3;
-                    const devEndDate = addWorkingDays(today, estimatedDays);
+                    // Dev End: 2 minggu dari sekarang (hardcoded)
+                    const devEndDate = addWorkingDays(today, 14);
                     // QC selalu 10 working days (2 minggu) setelah programmer selesai
                     const qcEndDate = addWorkingDays(devEndDate, 10);
 
-                    const userName = currentUser?.displayName || currentUser?.name || '';
+                    const userName = currentUser?.name || '';
 
                     // Map complexity ke bobot
                     let bobot = 'Medium';
@@ -928,6 +959,12 @@ PENTING: Return HANYA JSON yang valid. Tidak boleh ada markdown code block, penj
                     const result = await jiraService.createSubtask(parentIssueKey, {
                         summary: formData.summary,
                         description: formData.description,
+                        bobot: formData.bobot,
+                        storyPoint: formData.storyPoint,
+                        systemAnalyst: formData.systemAnalyst,
+                        programmer: formData.programmer,
+                        programmerEnd: formData.programmerEnd,
+                        qcEnd: formData.qcEnd,
                     });
 
                     setSuccess({
