@@ -438,6 +438,11 @@
                         customfield_10670: { value: bootTaskValue },  // Boot Task (Complex/Average/Simple)
                     };
 
+                    // Tambahkan labels jika ada
+                    if (subtaskData.labels && subtaskData.labels.length > 0) {
+                        fields.labels = subtaskData.labels;
+                    }
+
                     // Tambahkan assignee jika ada programmer
                     if (subtaskData.programmer) {
                         fields.assignee = { name: subtaskData.programmer };
@@ -568,6 +573,10 @@ PENTING:
                     }
                 } catch (error) {
                     console.error('AI Error Details:', error);
+                    // Handle image error gracefully
+                    if (error.message && error.message.includes('image')) {
+                        throw new Error('⚠️ AI tidak bisa memproses image. Gunakan text description saja tanpa gambar/link.');
+                    }
                     throw new Error(`AI Error: ${error.message}`);
                 }
             },
@@ -841,6 +850,11 @@ PENTING:
                             <input type="datetime-local" id="qcEnd" name="qcEnd" value={formData.qcEnd || ''} onChange={handleChange} disabled={loading} />
                             {errors.qcEnd && <span className="error">{errors.qcEnd}</span>}
                         </div>
+
+                        <div className="form-group">
+                            <label htmlFor="labels">Labels</label>
+                            <input type="text" id="labels" name="labels" value={formData.labels || ''} onChange={handleChange} placeholder="PascaUAT-Simaudi, IKU-Vananda" disabled={loading} />
+                        </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
@@ -864,6 +878,7 @@ PENTING:
         // ========== MAIN COMPONENT ==========
         function SubtaskGenerator() {
             const [parentIssueKey, setParentIssueKey] = useState('');
+            const [parentIssueData, setParentIssueData] = useState(null);
             const [inputValue, setInputValue] = useState('');
             const [isKeySet, setIsKeySet] = useState(false);
             const [loading, setLoading] = useState(false);
@@ -888,15 +903,35 @@ PENTING:
                 });
             }, []);
 
-            const handleSetIssue = () => {
+            const handleSetIssue = async () => {
                 setError(null);
                 const key = parseIssueKey(inputValue);
                 if (!key || !/^[A-Z][A-Z0-9]+-\d+$/i.test(key)) {
                     setError('Format tidak valid. Gunakan format: PCC-1439 atau https://jira.beacukai.go.id/browse/PCC-1439');
                     return;
                 }
-                setParentIssueKey(key);
-                setIsKeySet(true);
+                
+                // Fetch parent issue data
+                try {
+                    const response = await axios.get(
+                        `${CONFIG.JIRA_SERVER}/rest/api/3/issues/${key}`,
+                        {
+                            auth: {
+                                username: 'api_token',
+                                password: CONFIG.JIRA_PAT,
+                            },
+                            headers: {
+                                'Accept': 'application/json',
+                            },
+                        }
+                    );
+                    setParentIssueData(response.data);
+                    setParentIssueKey(key);
+                    setIsKeySet(true);
+                } catch (err) {
+                    setError(`Gagal fetch issue: ${err.message}`);
+                    setParentIssueData(null);
+                }
             };
 
             const handleKeyPress = (e) => {
@@ -933,6 +968,10 @@ PENTING:
                     else if (aiResponse.complexity === 'Complex') storyPoint = '8';
                     else if (aiResponse.complexity === 'Very Complex') storyPoint = '13';
 
+                    // Get labels dari parent issue
+                    const labels = parentIssueData?.fields?.labels || [];
+                    const labelString = labels.join(', ');
+
                     setReviewData({
                         summary: aiResponse.summary || 'Subtask',
                         description: aiResponse.description || userInput,
@@ -942,6 +981,7 @@ PENTING:
                         programmer: userName,
                         programmerEnd: formatDateTimeLocal(devEndDate),
                         qcEnd: formatDateTimeLocal(qcEndDate),
+                        labels: labelString,
                     });
                 } catch (err) {
                     setError(err.message);
@@ -956,6 +996,9 @@ PENTING:
                 setSuccess(null);
 
                 try {
+                    // Parse labels from string
+                    const labelList = formData.labels ? formData.labels.split(',').map(l => l.trim()).filter(l => l) : [];
+
                     const result = await jiraService.createSubtask(parentIssueKey, {
                         summary: formData.summary,
                         description: formData.description,
@@ -965,6 +1008,7 @@ PENTING:
                         programmer: formData.programmer,
                         programmerEnd: formData.programmerEnd,
                         qcEnd: formData.qcEnd,
+                        labels: labelList,
                     });
 
                     setSuccess({
