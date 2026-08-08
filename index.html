@@ -1014,6 +1014,13 @@ PENTING:
                 setLastUserInput('');
             };
 
+            const handleEditStep2 = () => {
+                setSuccess(null);
+                setError(null);
+                setReviewData(null);
+                // Keep lastUserInput untuk bisa edit lagi
+            };
+
             return (
                 <div className="subtask-generator">
                     <div className="header">
@@ -1116,9 +1123,13 @@ PENTING:
                                                 </a>
                                             </p>
                                         )}
-                                        <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                                        <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
                                             <button className="create-another-btn" onClick={handleCreateAnother}>
                                                 + Buat Subtask Lagi (Parent Sama)
+                                            </button>
+                                            <button className="create-another-btn" onClick={handleEditStep2}
+                                                style={{ color: '#ff9800' }}>
+                                                ✏️ Ubah Step 2
                                             </button>
                                             <button className="create-another-btn" onClick={resetAll}
                                                 style={{ color: '#667eea' }}>
