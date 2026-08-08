@@ -473,16 +473,17 @@
 Berdasarkan deskripsi task dari user, analyze kompleksitas task dan generate ringkasan, deskripsi, serta estimasi waktu dalam format JSON:
 
 {
-  "summary": "[FE|BE|Mobile|QA|DevOps] - Ringkasan singkat dan jelas (maksimal 200 karakter, dalam Bahasa Indonesia)",
+  "summary": "[FE|BE|Mobile|QA|DevOps] Ringkasan singkat dan jelas (maksimal 200 karakter, dalam Bahasa Indonesia)",
   "description": "## Deskripsi\\nPenjelasan apa yang harus dikerjakan\\n\\n## Permasalahan\\nMasalah atau konteks mengapa task ini penting\\n\\n## Langkah Pengerjaan\\n1. Langkah 1\\n2. Langkah 2\\n3. Langkah 3\\n\\n## Acceptance Criteria\\n- [ ] Kriteria 1\\n- [ ] Kriteria 2",
   "complexity": "Simple|Medium|Complex|Very Complex",
   "estimatedDays": 14
 }
 
 PENTING TENTANG SUMMARY:
-- Gunakan prefix kategori: [FE] untuk Frontend, [BE] untuk Backend, [Mobile] untuk Mobile, [QA], atau [DevOps]
-- Contoh: "[FE] - Buat form login dengan validasi email"
-- Contoh: "[BE] - Implementasi API endpoint untuk user authentication"
+- Gunakan prefix kategori TANPA dash: [FE] untuk Frontend, [BE] untuk Backend, [Mobile] untuk Mobile, [QA], atau [DevOps]
+- Contoh: "[FE] Buat form login dengan validasi email"
+- Contoh: "[BE] Implementasi API endpoint untuk user authentication"
+- Format: [CATEGORY] Description (tidak boleh ada dash antara kategori dan description)
 
 Panduan Kompleksitas dan Estimasi (dalam hari kerja):
 - Simple: Validasi form, UI tweak, bug fix kecil → 3-5 hari
