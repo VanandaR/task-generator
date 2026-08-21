@@ -99,9 +99,9 @@ const server = http.createServer(async (req, res) => {
       const postData = JSON.stringify({
         model: AI_MODEL_NAME,
         messages: body.messages,
-        temperature: 0.7,
+        temperature: body.temperature || 0.7,
         top_p: 0.9,
-        max_tokens: 1000,
+        max_tokens: body.max_tokens || 1000,
       });
 
       const result = await proxyRequest(
