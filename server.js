@@ -102,6 +102,8 @@ const server = http.createServer(async (req, res) => {
         temperature: body.temperature || 0.7,
         top_p: 0.9,
         max_tokens: body.max_tokens || 1000,
+        // Disable thinking/reasoning mode for GLM models (much faster generation)
+        chat_template_kwargs: { enable_thinking: false },
       });
 
       const result = await proxyRequest(
