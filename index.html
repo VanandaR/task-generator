@@ -495,8 +495,11 @@
         };
 
         const aiService = {
-            generateDescription: async (userInput, isRegenerate = false) => {
+            generateDescription: async (userInput, isRegenerate = false, previous = null) => {
                 try {
+                    const previousBlock = (isRegenerate && previous)
+                        ? `\n\nHASIL SEBELUMNYA (JANGAN diulang, WAJIB dibuat versi yang jauh lebih spesifik, berbeda sudut pandang, dan lebih komprehensif):\nSummary lama: ${previous.summary || '-'}\nDeskripsi lama:\n${(previous.description || '-').substring(0, 1500)}`
+                        : '';
                     const prompt = `Kamu adalah Senior Technical Lead & Scrum Master untuk tim software development Jira.
 
 TUGAS UTAMA:
@@ -526,7 +529,7 @@ ATURAN DESCRIPTION (PERSIS ikuti struktur ini):
 
 Deskripsi task dari user:
 ${userInput}
-${isRegenerate ? "\\n(CATATAN REGENERATE: Ini adalah tombol Re-generate. DILARANG mengulang teks sebelumnya. Buatkan uraian teknis, langkah pengerjaan, dan kriteria sukses BARU yang lebih spesifik, komprehensif, dan beda dari sebelumnya.)" : ""}`;
+${isRegenerate ? "\\n(CATATAN REGENERATE: Ini adalah tombol Re-generate. DILARANG mengulang teks sebelumnya. Buatkan uraian teknis, langkah pengerjaan, dan kriteria sukses BARU yang lebih spesifik, komprehensif, dan beda dari sebelumnya.)" : ""}${previousBlock}`;
                     const response = await axios.post('/api/ai/generate', {
                             model: CONFIG.AI_MODEL_NAME,
                             messages: [
@@ -1099,7 +1102,7 @@ ${isRegenerate ? "\\n(CATATAN REGENERATE: Ini adalah tombol Re-generate. DILARAN
                 setLastUserInput(userInput);
 
                 try {
-                    const aiResponse = await aiService.generateDescription(userInput, isRegenerate);
+                    const aiResponse = await aiService.generateDescription(userInput, isRegenerate, isRegenerate ? reviewData : null);
 
                     // Detect if AI fallback was used
                     const descText = aiResponse.description || "";
@@ -1144,16 +1147,17 @@ ${isRegenerate ? "\\n(CATATAN REGENERATE: Ini adalah tombol Re-generate. DILARAN
                     else if (aiResponse.complexity === 'Complex' || aiResponse.complexity === 'Very Complex') storyPoint = '15';
 
 
-                    setReviewData({
+                    setReviewData(prev => ({
                         summary: aiResponse.summary || 'Subtask',
                         description: aiResponse.description || userInput,
                         bobot: bobot,
                         storyPoint: storyPoint,
-                         systemAnalyst: userName,
-                         programmer: userName,
-                         programmerEnd: formatDateTimeLocal(devEndDate),
-                         qcEnd: formatDateTimeLocal(qcEndDate),
-                    });
+                        // Saat Re-generate: pertahankan edit-an user (analyst & programmer)
+                        systemAnalyst: (isRegenerate && prev?.systemAnalyst) ? prev.systemAnalyst : userName,
+                        programmer: (isRegenerate && prev?.programmer) ? prev.programmer : userName,
+                        programmerEnd: formatDateTimeLocal(devEndDate),
+                        qcEnd: formatDateTimeLocal(qcEndDate),
+                    }));
                 } catch (err) {
                     setError(err.message);
                 } finally {
