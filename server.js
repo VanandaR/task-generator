@@ -102,33 +102,56 @@ const server = http.createServer(async (req, res) => {
         try { extraParams = JSON.parse(process.env.REACT_APP_AI_EXTRA_PARAMS); } catch (e) { /* ignore invalid JSON */ }
       }
 
-      const postData = JSON.stringify({
-        model: AI_MODEL_NAME,
-        messages: body.messages,
-        temperature: body.temperature || 0.7,
-        top_p: 0.9,
-        max_tokens: body.max_tokens || 1000,
-        ...extraParams,
-      });
+      // Primary model + fallbacks (comma-separated in .env)
+      const models = [AI_MODEL_NAME]
+        .concat((process.env.REACT_APP_AI_FALLBACK_MODELS || '').split(',').map(m => m.trim()).filter(Boolean));
 
-      const result = await proxyRequest(
-        {
-          protocol: aiUrl.protocol,
-          hostname: aiUrl.hostname,
-          port: aiUrl.port,
-          path: aiUrl.pathname,
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${OPENAI_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(postData),
-          },
-        },
-        postData
-      );
+      const retryableStatuses = new Set([429, 500, 502, 503, 504]);
+      const wait = ms => new Promise(r => setTimeout(r, ms));
+      const attemptsPerModel = 2;
 
-      res.writeHead(result.statusCode, { 'Content-Type': 'application/json' });
-      res.end(result.body);
+      let lastResult = null;
+      let lastModel = null;
+      for (const model of models) {
+        const postData = JSON.stringify({
+          model,
+          messages: body.messages,
+          temperature: body.temperature || 0.7,
+          top_p: 0.9,
+          max_tokens: body.max_tokens || 1000,
+          ...extraParams,
+        });
+
+        for (let attempt = 1; attempt <= attemptsPerModel; attempt++) {
+          lastResult = await proxyRequest(
+            {
+              protocol: aiUrl.protocol,
+              hostname: aiUrl.hostname,
+              port: aiUrl.port,
+              path: aiUrl.pathname,
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(postData),
+              },
+            },
+            postData
+          );
+          lastModel = model;
+          if (!retryableStatuses.has(lastResult.statusCode)) break;
+          console.warn(`AI ${model} attempt ${attempt} -> ${lastResult.statusCode}, ${attempt < attemptsPerModel ? 'retrying' : 'next fallback'}`);
+          if (attempt < attemptsPerModel) await wait(1500);
+        }
+        if (lastResult && !retryableStatuses.has(lastResult.statusCode)) break;
+      }
+
+      if (lastResult && lastModel !== AI_MODEL_NAME && lastResult.statusCode === 200) {
+        console.log(`AI served by fallback model: ${lastModel}`);
+      }
+
+      res.writeHead(lastResult ? lastResult.statusCode : 500, { 'Content-Type': 'application/json' });
+      res.end(lastResult ? lastResult.body : JSON.stringify({ error: 'No response from AI provider' }));
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: error.message }));
