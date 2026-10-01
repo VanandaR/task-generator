@@ -96,14 +96,19 @@ const server = http.createServer(async (req, res) => {
       const body = JSON.parse(await readBody(req));
       const aiUrl = new URL(`${OPENAI_BASE_URL}/chat/completions`);
 
+      // Optional extra body params from .env (e.g. {"reasoning_effort":"low"})
+      let extraParams = {};
+      if (process.env.REACT_APP_AI_EXTRA_PARAMS) {
+        try { extraParams = JSON.parse(process.env.REACT_APP_AI_EXTRA_PARAMS); } catch (e) { /* ignore invalid JSON */ }
+      }
+
       const postData = JSON.stringify({
         model: AI_MODEL_NAME,
         messages: body.messages,
         temperature: body.temperature || 0.7,
         top_p: 0.9,
         max_tokens: body.max_tokens || 1000,
-        // Disable thinking/reasoning mode for GLM models (much faster generation)
-        chat_template_kwargs: { enable_thinking: false },
+        ...extraParams,
       });
 
       const result = await proxyRequest(
