@@ -763,7 +763,7 @@ ${isRegenerate ? "\\n(CATATAN REGENERATE: Ini adalah tombol Re-generate. DILARAN
              const handleSubmit = () => {
                  if (validateForm()) {
                      setSelectedLabels(editingLabels);
-                     onSubmit(formData);
+                     onSubmit(formData, editingLabels);
                  }
              };
 
@@ -1050,6 +1050,16 @@ ${isRegenerate ? "\\n(CATATAN REGENERATE: Ini adalah tombol Re-generate. DILARAN
                  'Database-SmartPCC',
                  'TOR2-EAUDIT',
              ];
+             // Mapping label -> parent issue (otomatis mengisi parent saat label dipilih)
+             const LABEL_PARENT_MAP = {
+                 'PascaUAT2-SIMAUDI': 'PCC-1439',
+                 'PascaUAT-SIMONTA': 'PCC-1515',
+                 'Database-SmartPCC': 'PCC-1099',
+             };
+             const resolveParentFromLabels = (labels) => {
+                 const mapped = (labels || []).filter(l => LABEL_PARENT_MAP[l]);
+                 return mapped.length > 0 ? LABEL_PARENT_MAP[mapped[mapped.length - 1]] : null;
+             };
              const [parentIssueKey, setParentIssueKey] = useState('');
              const [parentIssueData, setParentIssueData] = useState(null);
              const [inputValue, setInputValue] = useState('');
@@ -1078,6 +1088,16 @@ ${isRegenerate ? "\\n(CATATAN REGENERATE: Ini adalah tombol Re-generate. DILARAN
                     }
                 });
             }, []);
+
+            // Auto-set parent issue saat label dengan mapping dipilih
+            useEffect(() => {
+                const mappedKey = resolveParentFromLabels(selectedLabels);
+                if (mappedKey) {
+                    setParentIssueKey(mappedKey);
+                    setInputValue(mappedKey);
+                    setIsKeySet(true);
+                }
+            }, [selectedLabels]);
 
             const handleSetIssue = () => {
                 setError(null);
@@ -1166,14 +1186,16 @@ ${isRegenerate ? "\\n(CATATAN REGENERATE: Ini adalah tombol Re-generate. DILARAN
                 }
             };
 
-            const handleCreate = async (formData) => {
+            const handleCreate = async (formData, labelsOverride) => {
                 setLoading(true);
                 setError(null);
                 setSuccess(null);
 
                 try {
-                     // Use selectedLabels array directly
-                     const result = await jiraService.createSubtask(parentIssueKey, {
+                     // Gunakan labels dari form (bisa berubah di Step 3), lalu resolve parent dari mapping
+                     const labelsToUse = labelsOverride || selectedLabels;
+                     const effectiveParentKey = resolveParentFromLabels(labelsToUse) || parentIssueKey;
+                     const result = await jiraService.createSubtask(effectiveParentKey, {
                          summary: formData.summary,
                          description: formData.description,
                          bobot: formData.bobot,
@@ -1182,7 +1204,7 @@ ${isRegenerate ? "\\n(CATATAN REGENERATE: Ini adalah tombol Re-generate. DILARAN
                          programmer: formData.programmer,
                          programmerEnd: formData.programmerEnd,
                          qcEnd: formData.qcEnd,
-                         labels: selectedLabels,
+                         labels: labelsToUse,
                      });
 
                     setSuccess({
@@ -1274,6 +1296,9 @@ ${isRegenerate ? "\\n(CATATAN REGENERATE: Ini adalah tombol Re-generate. DILARAN
                                                      }}
                                                  />
                                                  {label}
+                                                 {LABEL_PARENT_MAP[label] && (
+                                                     <span style={{ color: '#888', fontSize: '11px' }}>→ {LABEL_PARENT_MAP[label]}</span>
+                                                 )}
                                              </label>
                                          ))}
                                      </div>
