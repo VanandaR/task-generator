@@ -1074,6 +1074,7 @@ ${isRegenerate ? "\\n(CATATAN REGENERATE: Ini adalah tombol Re-generate. DILARAN
             const [reviewData, setReviewData] = useState(null);
             const [lastUserInput, setLastUserInput] = useState('');
             const [aiWarning, setAiWarning] = useState(null);
+            const [jiraAuthError, setJiraAuthError] = useState(null);
 
             // Load config & current user on mount
             useEffect(() => {
@@ -1081,11 +1082,20 @@ ${isRegenerate ? "\\n(CATATAN REGENERATE: Ini adalah tombol Re-generate. DILARAN
                     setJiraServer(res.data.jiraServer || '');
                 }).catch(() => { });
 
-                jiraService.getCurrentUser().then(user => {
-                    if (user) {
-                        setCurrentUser(user);
-                        window.currentUserData = user;
+                axios.get('/api/jira/myself').then(res => {
+                    if (res.data) {
+                        setCurrentUser(res.data);
+                        window.currentUserData = res.data;
                     }
+                    setJiraAuthError(null);
+                }).catch(err => {
+                    const status = err.response?.status;
+                    if (status === 401) {
+                        setJiraAuthError('⚠️ PAT Jira tidak valid atau sudah expired (401 Unauthorized). Perbarui REACT_APP_JIRA_PAT di file .env lalu restart server.');
+                    } else {
+                        setJiraAuthError('⚠️ Gagal terhubung ke Jira: ' + (err.message || 'unknown error'));
+                    }
+                    console.warn('Could not fetch Jira user:', err.message);
                 });
             }, []);
 
@@ -1254,6 +1264,21 @@ ${isRegenerate ? "\\n(CATATAN REGENERATE: Ini adalah tombol Re-generate. DILARAN
                             <p style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
                                 👤 Logged in as: <strong>{currentUser.displayName || currentUser.name}</strong>
                             </p>
+                        )}
+                        {jiraAuthError && (
+                            <div style={{
+                                background: '#fdecea',
+                                border: '1px solid #f5c6cb',
+                                color: '#721c24',
+                                borderRadius: '8px',
+                                padding: '12px 16px',
+                                marginTop: '12px',
+                                fontSize: '13px',
+                                lineHeight: '1.5',
+                                textAlign: 'left',
+                            }}>
+                                {jiraAuthError}
+                            </div>
                         )}
                     </div>
 
